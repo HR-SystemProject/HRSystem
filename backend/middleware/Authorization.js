@@ -1,4 +1,4 @@
-const authorize = (text) => {
+const authorize = (roles) => {
   return (req, res, next) => {
     try {
       if (!roles.includes(req.user.role)) {
