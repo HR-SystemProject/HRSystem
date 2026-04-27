@@ -4,7 +4,7 @@ const DepartmentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String },
 
-  managerId: { type: mongoose.Schema.Types.objectId, ref: "Employee" },
+  managerId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
   employees: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -13,4 +13,4 @@ const DepartmentSchema = new mongoose.Schema({
   ],
 });
 
-module.export = mongoose.module("Department", DepartmentSchema);
+module.exports = mongoose.model("Department", DepartmentSchema);

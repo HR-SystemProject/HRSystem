@@ -14,12 +14,9 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 
-
-// Test route
-app.get("/", (req, res) => {
-  res.send("API is running");
-});
-
+// Department Router
+const departmentRouter = require("./routers/department");
+app.use("/departments", departmentRouter);
 
 app.listen(PORT, () => {
   console.log(`Example application listening at http://localhost:${PORT}`);

@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 
 const EmployeeSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.objectId, ref: "User", required: true },
-  departmentId: { type: mongoose.Schema.Types.objectId, ref: " Department" },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  departmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
   jobTitle: { type: String },
-  salary: { Number },
-  hireDate: { Date },
+  salary: { type: Number },
+  hireDate: { type: Date },
   phone: { type: String },
   address: { type: String },
   status: {
@@ -15,4 +15,4 @@ const EmployeeSchema = new mongoose.Schema({
   },
 });
 
-module.export = mongoose.module("Employee", EmployeeSchema);
+module.exports = mongoose.model("Employee", EmployeeSchema);
