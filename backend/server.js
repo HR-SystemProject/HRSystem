@@ -14,6 +14,14 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 
+// User Router
+const userRouter = require("./routers/user");
+app.use("/users", userRouter);
+
+// Role Router
+const roleRouter = require("./routers/role");
+app.use("/roles", roleRouter);
+
 // Department Router
 const departmentRouter = require("./routers/department");
 app.use("/departments", departmentRouter);
