@@ -38,4 +38,142 @@ const createRole = async (req, res) => {
   }
 };
 
-module.exports = { createRole };
+
+
+// GET ALL
+const getRoles = async (req, res) => {
+  try {
+    const roles = await roleModel.find();
+
+    return res.status(200).json({
+      success: true,
+      message: "Roles fetched successfully",
+      data: roles,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// GET BY ID
+const getRoleById = async (req, res) => {
+  try {
+    const role = await roleModel.findById(req.params.id);
+
+    if (!role) {
+      return res.status(404).json({
+        success: false,
+        message: "Role not found",
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: role,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// UPDATE
+const updateRole = async (req, res) => {
+  try {
+    const updated = await roleModel.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    return res.json({
+      success: true,
+      message: "Role updated",
+      data: updated,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// DELETE
+const deleteRole = async (req, res) => {
+  try {
+    await roleModel.findByIdAndDelete(req.params.id);
+
+    return res.json({
+      success: true,
+      message: "Role deleted",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// ADD PERMISSION
+const addPermission = async (req, res) => {
+  try {
+    const { permission } = req.body;
+
+    const role = await roleModel.findById(req.params.id);
+
+    role.permissions.push(permission);
+    await role.save();
+
+    return res.json({
+      success: true,
+      message: "Permission added",
+      data: role,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// REMOVE PERMISSION
+const removePermission = async (req, res) => {
+  try {
+    const role = await roleModel.findById(req.params.id);
+
+    role.permissions = role.permissions.filter(
+      (p) => p !== req.params.permission
+    );
+
+    await role.save();
+
+    return res.json({
+      success: true,
+      message: "Permission removed",
+      data: role,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+module.exports = {
+  createRole,
+  getRoles,
+  getRoleById,
+  updateRole,
+  deleteRole,
+  addPermission,
+  removePermission,
+};
