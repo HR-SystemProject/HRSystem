@@ -26,6 +26,10 @@ app.use("/roles", roleRouter);
 const departmentRouter = require("./routers/department");
 app.use("/departments", departmentRouter);
 
+// Attendance Router
+const attendanceRouter = require("./routers/attendance");
+app.use("/attendance", attendanceRouter);
+
 app.listen(PORT, () => {
   console.log(`Example application listening at http://localhost:${PORT}`);
 });
