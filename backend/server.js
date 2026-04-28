@@ -23,8 +23,12 @@ const roleRouter = require("./routers/role");
 app.use("/roles", roleRouter);
 
 // Department Router
-const departmentRouter = require("./routers/department");
-app.use("/departments", departmentRouter);
+const departmentRouter = require("./routers/employeeRoutes");
+app.use("/employee", departmentRouter);
+
+// Department Router
+const employeeRoutes = require("./routers/employeeRoutes");
+app.use("/employee", employeeRoutes);
 
 app.listen(PORT, () => {
   console.log(`Example application listening at http://localhost:${PORT}`);
