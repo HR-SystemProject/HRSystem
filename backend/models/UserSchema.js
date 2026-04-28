@@ -1,21 +1,24 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
-const UserSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-    trim: true,
-    match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
+const UserSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
+    },
+    password: { type: String, required: true, minlength: 6 },
+    role: { type: mongoose.Schema.Types.ObjectId, ref: "Role" },
+    isActive: { type: Boolean, default: true },
+    profileImage: { type: String },
   },
-  password: { type: String, required: true, minlength: 6 },
-  role: { type: mongoose.Schema.Types.ObjectId, ref: "Role" },
-  isActive: { type: Boolean, default: true },
-  profileImage: { type: String },
-});
+  { timestamps: true },
+);
 
 UserSchema.pre("save", async function () {
   this.email = this.email.toLowerCase();
