@@ -1,49 +1,18 @@
+const mongoose = require("mongoose");
 const roleModel = require("../models/RoleSchema");
 
-// create Role
-const createRole = async (req, res) => {
-  try {
-    const { roleName, permissions } = req.body;
-
-    if (!roleName) {
-      return res.status(400).json({
-        success: false,
-        message: "Role name is required",
-      });
-    }
-
-     if (!Array.isArray(permissions)) {
-      return res.status(400).json({
-        success: false,
-        message: "permissions must be an array",
-      });
-    }
-
-    const newRole = new roleModel({
-      roleName,
-      permissions,
-    });
-
-    const result = await newRole.save();
-    return res.status(201).json({
-      success: true,
-      message: "Role created successfully!",
-      data: result,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
-
-// GET ALL
+// get roles
 const getRoles = async (req, res) => {
   try {
-    const roles = await roleModel.find();
+    const userRole = req.user.role;
+
+    if (userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+    const roles = await roleModel.find({});
 
     return res.status(200).json({
       success: true,
@@ -58,10 +27,20 @@ const getRoles = async (req, res) => {
   }
 };
 
-// GET BY ID
+// get roles/:id
 const getRoleById = async (req, res) => {
   try {
-    const role = await roleModel.findById(req.params.id);
+    const roleId = req.params.id;
+    const userRole = req.user.role;
+
+    if (userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    const role = await roleModel.findById(roleId);
 
     if (!role) {
       return res.status(404).json({
@@ -70,8 +49,9 @@ const getRoleById = async (req, res) => {
       });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
+      message: "Role fetched successfully",
       data: role,
     });
   } catch (error) {
@@ -82,18 +62,82 @@ const getRoleById = async (req, res) => {
   }
 };
 
-// UPDATE
+// create roles
+const createRole = async (req, res) => {
+  try {
+    const { roleName, permissions } = req.body;
+    const userRole = req.user.role;
+
+    if (userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    if (!roleName) {
+      return res.status(400).json({
+        success: false,
+        message: "Role name is required",
+      });
+    }
+
+    if (!Array.isArray(permissions)) {
+      return res.status(400).json({
+        success: false,
+        message: "permissions must be an array",
+      });
+    }
+
+    const newRole = new roleModel({
+      roleName,
+      permissions,
+    });
+
+    const result = await newRole.save();
+    return res.status(201).json({
+      success: true,
+      message: "Role created successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Update roles/:id
 const updateRole = async (req, res) => {
   try {
+    const userRole = req.user.role;
+    const roleId = req.params.id;
+    const { roleName, permissions } = req.body;
+
+    if (userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
     const updated = await roleModel.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
+      roleId,
+      { roleName, permissions },
+      { new: true, runValidators: true },
     );
 
-    return res.json({
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        message: "Role not found",
+      });
+    }
+
+    return res.status(200).json({
       success: true,
-      message: "Role updated",
+      message: "Role updated successfully",
       data: updated,
     });
   } catch (error) {
@@ -104,14 +148,32 @@ const updateRole = async (req, res) => {
   }
 };
 
-// DELETE
+// Delete roles/:id
 const deleteRole = async (req, res) => {
   try {
-    await roleModel.findByIdAndDelete(req.params.id);
+    const userRole = req.user.role;
+    const roleId = req.params.id;
 
-    return res.json({
+    if (userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    const deletedRole = await roleModel.findByIdAndDelete(roleId);
+
+    if (!deletedRole) {
+      return res.status(404).json({
+        success: false,
+        message: "Role not found",
+      });
+    }
+
+    return res.status(200).json({
       success: true,
-      message: "Role deleted",
+      message: "Role deleted successfully",
+      data: deletedRole,
     });
   } catch (error) {
     return res.status(500).json({
@@ -121,20 +183,48 @@ const deleteRole = async (req, res) => {
   }
 };
 
-// ADD PERMISSION
+// Add Permissions /:id/permissions
 const addPermission = async (req, res) => {
   try {
-    const { permission } = req.body;
+    const userRole = req.user.role;
+    const { permissions } = req.body;
+    const roleId = req.params.id;
 
-    const role = await roleModel.findById(req.params.id);
+    if (userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
 
-    role.permissions.push(permission);
-    await role.save();
+    if (!permissions || !Array.isArray(permissions)) {
+      return res.status(400).json({
+        success: false,
+        message: "Permissions must be an array",
+      });
+    }
 
-    return res.json({
+    const updatedRole = await roleModel.findByIdAndUpdate(
+      roleId,
+      {
+        $addToSet: {
+          permissions: { $each: permissions },
+        },
+      },
+      { new: true },
+    );
+
+    if (!updatedRole) {
+      return res.status(404).json({
+        success: false,
+        message: "Role not found",
+      });
+    }
+
+    return res.status(200).json({
       success: true,
-      message: "Permission added",
-      data: role,
+      message: "Permissions added successfully",
+      data: updatedRole,
     });
   } catch (error) {
     return res.status(500).json({
@@ -144,21 +234,47 @@ const addPermission = async (req, res) => {
   }
 };
 
-// REMOVE PERMISSION
+// Remove Permissions /:id/permissions/:permission
 const removePermission = async (req, res) => {
   try {
-    const role = await roleModel.findById(req.params.id);
+    const userRole = req.user.role;
+    const roleId = req.params.id;
+    const permission = req.params.permission;
 
-    role.permissions = role.permissions.filter(
-      (p) => p !== req.params.permission
+    if (userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    if (!permission) {
+      return res.status(400).json({
+        success: false,
+        message: "Permission is required",
+      });
+    }
+    const updatedRole = await roleModel.findByIdAndUpdate(
+      roleId,
+      {
+        $pull: {
+          permissions: permission,
+        },
+      },
+      { new: true },
     );
 
-    await role.save();
+    if (!updatedRole) {
+      return res.status(404).json({
+        success: false,
+        message: "Role not found",
+      });
+    }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
-      message: "Permission removed",
-      data: role,
+      message: "Permission removed successfully",
+      data: updatedRole,
     });
   } catch (error) {
     return res.status(500).json({
