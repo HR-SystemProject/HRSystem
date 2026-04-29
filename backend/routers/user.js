@@ -25,7 +25,7 @@ userRouter.post("/login", login);
 // LOGOUT
 userRouter.post("/logout", auth, logout);
 
-// UPDATE PROFILE
+// Update /:id/profile
 userRouter.put("/:id/profile", auth, updateProfile);
 
 // CHANGE PASSWORD
@@ -36,13 +36,13 @@ userRouter.post("/forget-password", forgetPassword);
 
 // ADMIN ROUTES
 
-// GET ALL USERS
+// Get users
 userRouter.get("/", auth, authorize("admin"), getUsers);
 
-// GET USER BY ID
+// Get users/:id
 userRouter.get("/:id", auth, authorize("admin"), getUserById);
 
-// DELETE USER
+// Delete users/:id
 userRouter.delete("/:id", auth, authorize("admin"), deleteUser);
 
 module.exports = userRouter;

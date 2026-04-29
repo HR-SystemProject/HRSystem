@@ -3,9 +3,7 @@ const roleModel = require("../models/RoleSchema");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-
-// CREATE USER - SIGNUP
-
+// Create user - Signup
 const createUser = async (req, res) => {
   try {
     const { name, email, password, role, profileImage } = req.body;
@@ -43,12 +41,10 @@ const createUser = async (req, res) => {
 
     const userRole = await roleModel.findOne({ roleName: "user" });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = new userModel({
       name,
       email,
-      password: hashedPassword,
+      password,
       role: userRole._id,
       profileImage,
     });
@@ -69,9 +65,7 @@ const createUser = async (req, res) => {
   }
 };
 
-
-// LOGIN
-
+// Login
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -92,7 +86,11 @@ const login = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const test = await bcrypt.hash("123456", 10);
+
+    const cleanHash = user.password.trim();
+
+    const isMatch = await bcrypt.compare(password, cleanHash);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -107,7 +105,7 @@ const login = async (req, res) => {
         role: user.role.roleName,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "24h" }
+      { expiresIn: "24h" },
     );
 
     return res.status(200).json({
@@ -124,11 +122,10 @@ const login = async (req, res) => {
   }
 };
 
-
-// LOGOUT
-
+// logout
 const logout = async (req, res) => {
   try {
+    // localStorage.removeItem("token");
     return res.json({
       success: true,
       message: "Logged out successfully",
@@ -141,18 +138,30 @@ const logout = async (req, res) => {
   }
 };
 
-
-// UPDATE PROFILE
-
+// Update /:id/profile
 const updateProfile = async (req, res) => {
   try {
     const { name, profileImage } = req.body;
+    const userIdFromToken = req.user.userId;
+    const userIdFromParams = req.params.id;
 
-    const updatedUser = await userModel.findByIdAndUpdate(
-      req.params.id,
-      { name, profileImage },
-      { new: true }
-    ).populate("role");
+    if (userIdFromToken !== userIdFromParams) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    const updatedUser = await userModel
+      .findByIdAndUpdate(
+        userIdFromParams,
+        {
+          ...(name && { name }),
+          ...(profileImage && { profileImage }),
+        },
+        { new: true },
+      )
+      .populate("role");
 
     if (!updatedUser) {
       return res.status(404).json({
@@ -161,7 +170,7 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Profile updated",
       data: updatedUser,
@@ -173,7 +182,6 @@ const updateProfile = async (req, res) => {
     });
   }
 };
-
 
 // FORGET PASSWORD
 
@@ -201,7 +209,6 @@ const forgetPassword = async (req, res) => {
     });
   }
 };
-
 
 // CHANGE PASSWORD
 
@@ -244,15 +251,23 @@ const changePassword = async (req, res) => {
   }
 };
 
-
-// ADMIN: GET ALL USERS
-
+// Admin: Get users
 const getUsers = async (req, res) => {
   try {
-    const users = await userModel.find().populate("role");
+    const userRole = req.user.role;
 
-    return res.json({
+    if (userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    const users = await userModel.find({}).populate("role").select("-password");
+
+    return res.status(200).json({
       success: true,
+      message: "Users fetched successfully",
       data: users,
     });
   } catch (error) {
@@ -263,12 +278,20 @@ const getUsers = async (req, res) => {
   }
 };
 
-
-// ADMIN: GET USER BY ID
-
+// Admin: Get users/:id
 const getUserById = async (req, res) => {
   try {
-    const user = await userModel.findById(req.params.id).populate("role");
+    const userRole = req.user.role;
+    const userId = req.params.id;
+
+    if (userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    const user = await userModel.findById(userId).populate("role");
 
     if (!user) {
       return res.status(404).json({
@@ -277,8 +300,9 @@ const getUserById = async (req, res) => {
       });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
+      message: "User fetched successfully",
       data: user,
     });
   } catch (error) {
@@ -289,12 +313,19 @@ const getUserById = async (req, res) => {
   }
 };
 
-
-// ADMIN: DELETE USER
-
+// Admin: Delete users/:id
 const deleteUser = async (req, res) => {
   try {
-    const user = await userModel.findByIdAndDelete(req.params.id);
+    const userRole = req.user.role;
+    const userId = req.params.id;
+
+    if (userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+    const user = await userModel.findByIdAndDelete(userId).select("-password");
 
     if (!user) {
       return res.status(404).json({
@@ -303,9 +334,10 @@ const deleteUser = async (req, res) => {
       });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
-      message: "User deleted",
+      message: "User deleted successfully",
+      data: user,
     });
   } catch (error) {
     return res.status(500).json({
