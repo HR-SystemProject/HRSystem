@@ -13,10 +13,10 @@ const authorize = require("../middleware/Authorization");
 const auth = require("../middleware/Authentication");
 
 // get all Departments
-departmentRouter.get("/", auth, authorize("hr,admin"), getDepartments);
+departmentRouter.get("/", auth, authorize("hr","admin"), getDepartments);
 
 // get Departments/:id
-departmentRouter.get("/:id", auth, authorize("hr,admin"), getDepartmentsById);
+departmentRouter.get("/:id", auth, authorize("hr","admin"), getDepartmentsById);
 
 // create Department
 departmentRouter.post("/", auth, authorize("admin"), createDepartments);
