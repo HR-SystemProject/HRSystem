@@ -1,7 +1,9 @@
 const authorize = (roles) => {
   return (req, res, next) => {
     try {
-      if (!roles.includes(req.user.role)) {
+      const userRole = req.user.role;
+
+      if (!roles.includes(userRole)) {
         return res.status(403).json({
           success: false,
           message: "Forbidden",
