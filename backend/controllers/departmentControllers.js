@@ -6,6 +6,8 @@ const getDepartments = async (req, res) => {
   try {
     const userRole = req.user.role;
 
+    console.log(userRole);
+
     if (userRole !== "admin" && userRole !== "hr") {
       return res.status(403).json({
         success: false,
@@ -98,15 +100,14 @@ const createDepartments = async (req, res) => {
 
     const result = await newDepartment.save();
 
-    // rafah should push employee controller لازم يطلع اسم المتغير اللي قام بالاضافه .populate()
-    //  const populatedResult = await departmentModel
-    // .findById(result._id)
-    // .populate("managerId", "name email");
+    const populatedResult = await departmentModel
+      .findById(result._id)
+      .populate("managerId", "name email");
 
     return res.status(201).json({
       success: true,
       message: "Department created successfully!",
-      data: result,
+      data: populatedResult,
     });
   } catch (error) {
     return res.status(500).json({
@@ -142,10 +143,7 @@ const updateDepartments = async (req, res) => {
       });
     }
 
-    // rafah should push employee controller "لازم يطلع اسم المدير اللي عمل التغيير" .populate()
-    //  const populatedResult = await departmentModel
-    // .findById(result._id)
-    // .populate("managerId", "name email");
+    await updateDepartment.populate("managerId", "name email");
 
     return res.status(200).json({
       success: true,
@@ -173,21 +171,22 @@ const deleteDepartment = async (req, res) => {
       });
     }
 
-      const result = await departmentModel.findByIdAndDelete(departmentId);
+    const result = await departmentModel
+      .findByIdAndDelete(departmentId)
+      .populate("managerId", "name email");
 
-      if (!result) {
-        return res.status(404).json({
-          success: false,
-          message: "Department not found",
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        message: "Department deleted successfully!",
-        data: result,
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: "Department not found",
       });
+    }
 
+    return res.status(200).json({
+      success: true,
+      message: "Department deleted successfully!",
+      data: result,
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -201,5 +200,5 @@ module.exports = {
   getDepartmentsById,
   createDepartments,
   updateDepartments,
-  deleteDepartment
+  deleteDepartment,
 };

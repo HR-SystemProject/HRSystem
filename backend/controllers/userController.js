@@ -184,7 +184,6 @@ const updateProfile = async (req, res) => {
 };
 
 // FORGET PASSWORD
-
 const forgetPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -211,7 +210,6 @@ const forgetPassword = async (req, res) => {
 };
 
 // CHANGE PASSWORD
-
 const changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
