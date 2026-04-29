@@ -14,25 +14,30 @@ const {
 const authorize = require("../middleware/Authorization");
 const auth = require("../middleware/Authentication");
 
-// create Role
-roleRouter.post("/", createRole);
+// get roles
+roleRouter.get("/", auth, authorize("admin"), getRoles);
 
-// Get Role
-roleRouter.get("/", getRoles);
+// get roles/:id
+roleRouter.get("/:id", auth, authorize("admin"), getRoleById);
 
-// Get Role/:id
-roleRouter.get("/:id", getRoleById);
+// create roles
+roleRouter.post("/", auth, authorize("admin"), createRole);
 
-// Update Role/:id
-roleRouter.put("/:id", updateRole);
+// Update roles/:id
+roleRouter.put("/:id", auth, authorize("admin"), updateRole);
 
-// Delete Role/:id
-roleRouter.delete("/:id", deleteRole);
+// Delete roles/:id
+roleRouter.delete("/:id", auth, authorize("admin"), deleteRole);
 
 // Add Permissions /:id/permissions
-roleRouter.post("/:id/permissions", addPermission);
+roleRouter.post("/:id/permissions", auth, authorize("admin"), addPermission);
 
 // Remove Permissions /:id/permissions/:permission
-roleRouter.delete("/:id/permissions/:permission", removePermission);
+roleRouter.delete(
+  "/:id/permissions/:permission",
+  auth,
+  authorize("admin"),
+  removePermission,
+);
 
 module.exports = roleRouter;
