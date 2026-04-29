@@ -14,13 +14,17 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 
+// Role Router
+const roleRouter = require("./routers/role");
+app.use("/roles", roleRouter);
+
 // User Router
 const userRouter = require("./routers/user");
 app.use("/users", userRouter);
 
-// Role Router
-const roleRouter = require("./routers/role");
-app.use("/roles", roleRouter);
+// Employee Router
+const employeeRouter = require("./routers/employee");
+app.use("/employees", employeeRouter);
 
 // Department Router
 const departmentRouter = require("./routers/department");
@@ -29,6 +33,14 @@ app.use("/departments", departmentRouter);
 // Attendance Router
 const attendanceRouter = require("./routers/attendance");
 app.use("/attendance", attendanceRouter);
+
+// LeaveRequest Router
+const leaveRequestRouter = require("./routers/leaveRequest");
+app.use("/leaveRequests", leaveRequestRouter);
+
+// Payroll Router
+const payrollRouter = require("./routers/payroll");
+app.use("/payroll", payrollRouter);
 
 app.listen(PORT, () => {
   console.log(`Example application listening at http://localhost:${PORT}`);
