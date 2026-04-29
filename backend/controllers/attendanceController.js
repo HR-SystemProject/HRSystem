@@ -1,6 +1,125 @@
 const mongoose = require("mongoose");
 const attendanceModel = require("../models/attendanceSchema");
 
+// get attendance/today
+const getTodayAttendance = async (req, res) => {
+  try {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const data = await attendanceModel
+      .find({
+        date: {
+          $gte: startOfDay,
+          $lte: endOfDay,
+        },
+      })
+      .sort({ createdAt: -1 });
+
+    if (!data.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No attendance records for today",
+      });
+    }
+
+    const formatted = data.map((item) => {
+      let workingTime = "Still working";
+
+      if (item.checkIn && item.checkOut) {
+        const diff = item.checkOut - item.checkIn;
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+        workingTime = `${hours}h ${minutes}m`;
+      }
+
+      return {
+         userId: item.employeeId,
+        checkIn: item.checkIn,
+        checkOut: item.checkOut,
+        status: item.status,
+        workingTime,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Today's attendance",
+      data: formatted,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// get attendance
+const getAttendance = async (req, res) => {
+  try {
+
+    const data = await attendanceModel
+      .find()
+      .sort({ createdAt: -1 });
+
+    if (!data.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No attendance records found",
+      });
+    }
+
+    const formatted = data.map((item) => {
+
+      let workingTime = null;
+
+      if(item.checkIn && item.checkOut){
+
+        const diff = item.checkOut - item.checkIn;
+
+        const hours = Math.floor(
+          diff / (1000 * 60 * 60)
+        );
+
+        const minutes = Math.floor(
+          (diff % (1000 * 60 * 60)) / (1000 * 60)
+        );
+
+        workingTime = `${hours}h ${minutes}m`;
+      }
+
+      return {
+        employeeId: item.employeeId,
+        date: item.date,
+        checkIn: item.checkIn,
+        checkOut: item.checkOut || null,
+        workingTime: workingTime || "Still working",
+        status: item.status
+      };
+
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "All attendance records",
+      data: formatted
+    });
+
+  } catch(error){
+    return res.status(500).json({
+      success:false,
+      message:error.message
+    });
+  }
+};
+
 // get Employee Attendance/:id
 const getEmployeeAttendance = async (req, res) => {
   try {
@@ -48,6 +167,127 @@ const getEmployeeAttendance = async (req, res) => {
         absentDays,
         records: formatted,
       },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// get Attendance/month/:month "for each employee"
+const getMonthlyAttendance = async (req, res) => {
+  try {
+    const employeeId = req.user.userId;
+    const month = Number(req.params.month);
+
+    const result = await attendanceModel.find({
+      employeeId,
+      $expr: {
+        $eq: [{ $month: "$date" }, month],
+      },
+    });
+
+    let totalHours = 0;
+    let absentDays = 0;
+    let lateDays = 0;
+
+    result.forEach((item) => {
+      totalHours += item.workingHours || 0;
+
+      if (item.status === "absent") absentDays++;
+      if (item.status === "late") lateDays++;
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        month,
+        totalHours,
+        absentDays,
+        lateDays,
+        records: result,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// get Attendance/monthlyReport/:month "for Hr ans admin"
+const getMonthlyAttendanceReport = async (req, res) => {
+  try {
+    const month = Number(req.params.month);
+
+    const result = await attendanceModel.aggregate([
+      {
+        $match: {
+          $expr: {
+            $eq: [{ $month: "$date" }, month],
+          },
+        },
+      },
+
+      {
+        $group: {
+          _id: "$employeeId",
+
+          totalHours: {
+            $sum: "$workingHours",
+          },
+
+          presentDays: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "present"] }, 1, 0],
+            },
+          },
+
+          lateDays: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "late"] }, 1, 0],
+            },
+          },
+
+          absentDays: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "absent"] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]);
+
+    if (!result.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No attendance records found",
+      });
+    }
+
+    const formatted = result.map((item) => {
+      const hours = Math.floor(item.totalHours);
+
+      const minutes = Math.round((item.totalHours - hours) * 60);
+
+      const totalWorkingTime = `${hours}h ${minutes}m`;
+
+      return {
+        employeeId: item._id,
+        totalWorkingTime,
+        presentDays: item.presentDays,
+        lateDays: item.lateDays,
+        absentDays: item.absentDays,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Monthly employees report",
+      data: formatted,
     });
   } catch (error) {
     return res.status(500).json({
@@ -168,4 +408,12 @@ const checkout = async (req, res) => {
   }
 };
 
-module.exports = { getEmployeeAttendance, checkIn, checkout };
+module.exports = {
+  getTodayAttendance,
+  getAttendance,
+  getEmployeeAttendance,
+  getMonthlyAttendance,
+  getMonthlyAttendanceReport,
+  checkIn,
+  checkout,
+};
