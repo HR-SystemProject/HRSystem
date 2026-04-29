@@ -11,27 +11,28 @@ const {
   removePermission,
 } = require("../controllers/roleController");
 
-
 const authorize = require("../middleware/Authorization");
 const auth = require("../middleware/Authentication");
 
-// create user
-roleRouter.post("/", createRole)
-router.get("/", getRoles);
-router.get("/:id", getRoleById);
-router.put("/:id", updateRole);
-router.delete("/:id", deleteRole);
+// create Role
+roleRouter.post("/", createRole);
 
-router.post("/:id/permissions", addPermission);
-router.delete("/:id/permissions/:permission", removePermission);
+// Get Role
+roleRouter.get("/", getRoles);
 
+// Get Role/:id
+roleRouter.get("/:id", getRoleById);
+
+// Update Role/:id
+roleRouter.put("/:id", updateRole);
+
+// Delete Role/:id
+roleRouter.delete("/:id", deleteRole);
+
+// Add Permissions /:id/permissions
+roleRouter.post("/:id/permissions", addPermission);
+
+// Remove Permissions /:id/permissions/:permission
+roleRouter.delete("/:id/permissions/:permission", removePermission);
 
 module.exports = roleRouter;
-
-
-
-
-
-
-
-
