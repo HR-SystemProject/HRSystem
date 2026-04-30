@@ -79,46 +79,58 @@ const getByEmployee = async (req, res) => {
   }
 };
 
-// // Get /payroll/my
-// const getMyPayroll = async (req, res) => {
-//   try {
-//     const userId = req.user.userId;
+// get payroll/my
+const getEmployeePayroll = async (req, res) => {
+  try {
+    const userId = req.user.userId;
 
-//     // const employee = await employeeModel.findOne({ userId });
+    const employee = await employeeModel.findOne({ userId });
 
-//     console.log("USER ID:", req.user.userId);
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
 
-//     const employee = await employeeModel.findOne({ userId: req.user.userId });
-//     console.log("EMPLOYEE:", employee);
+    const payroll = await payrollModel
+      .find({
+        employeeId: employee._id,
+      })
+      .populate({
+        path: "employeeId",
+        populate: [
+          {
+            path: "userId",
+            select: "name email",
+          },
+          {
+            path: "departmentId",
+            select: "name",
+          },
+        ],
+      });
 
-//     if (!employee) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Employee not found",
-//       });
-//     }
+    if (!payroll.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No payroll records found",
+        data: [],
+      });
+    }
 
-//     const data = await payrollModel
-//       .find({ employeeId: employee._id })
-//       .populate({
-//         path: "employeeId",
-//         populate: [
-//           { path: "userId", select: "name email" },
-//           { path: "departmentId", select: "name" },
-//         ],
-//       });
-
-//     return res.status(200).json({
-//       success: true,
-//       data,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// };
+    res.status(200).json({
+      success: true,
+      message: "Payroll fetched successfully",
+      data: payroll,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 // Create payroll
 const createPayroll = async (req, res) => {
@@ -199,31 +211,63 @@ const createPayroll = async (req, res) => {
   }
 };
 
-// UPDATE PAYROLL
+// Update payroll/:id
 const updatePayroll = async (req, res) => {
   try {
-    const { baseSalary, bonus, deductions } = req.body;
+    const userRole = req.user.role;
 
-    if (baseSalary) {
-      req.body.netSalary = baseSalary + (bonus || 0) - (deductions || 0);
+    if (!["admin", "hr"].includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
     }
 
-    const updated = await payrollModel.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true },
-    );
+    const { baseSalary, bonus, deductions } = req.body;
 
-    if (!updated) {
+    const payroll = await payrollModel.findById(req.params.id);
+
+    if (!payroll) {
       return res.status(404).json({
         success: false,
         message: "Payroll not found",
       });
     }
 
-    return res.json({
+    const newBase = Number(baseSalary ?? payroll.baseSalary);
+    const newBonus = Number(bonus ?? payroll.bonus);
+    const newDeductions = Number(deductions ?? payroll.deductions);
+
+    if (isNaN(newBase) || isNaN(newBonus) || isNaN(newDeductions)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid numeric values",
+      });
+    }
+
+    const netSalary =
+      Number(newBase) + Number(newBonus) - Number(newDeductions);
+
+    const updated = await payrollModel
+      .findByIdAndUpdate(
+        req.params.id,
+        {
+          ...req.body,
+          netSalary,
+        },
+        { new: true },
+      )
+      .populate({
+        path: "employeeId",
+        populate: [
+          { path: "userId", select: "name email" },
+          { path: "departmentId", select: "name" },
+        ],
+      });
+
+    return res.status(200).json({
       success: true,
-      message: "Payroll updated",
+      message: "Payroll updated successfully",
       data: updated,
     });
   } catch (error) {
@@ -234,11 +278,18 @@ const updatePayroll = async (req, res) => {
   }
 };
 
-// UPDATE STATUS
-
+// Update status
 const updateStatus = async (req, res) => {
   try {
+    const userRole = req.user.role;
     const { status } = req.body;
+
+    if (!["admin", "hr"].includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
 
     const allowed = ["paid", "pending"];
 
@@ -248,16 +299,34 @@ const updateStatus = async (req, res) => {
         message: "Invalid status",
       });
     }
+    const payroll = await payrollModel.findById(req.params.id);
 
-    const updated = await payrollModel.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true },
-    );
+    if (!payroll) {
+      return res.status(404).json({
+        success: false,
+        message: "Payroll not found",
+      });
+    }
 
-    return res.json({
+    if (payroll.status === status) {
+      return res.status(400).json({
+        success: false,
+        message: "Status already set",
+      });
+    }
+    const updated = await payrollModel
+      .findByIdAndUpdate(req.params.id, { status }, { new: true })
+      .populate({
+        path: "employeeId",
+        populate: [
+          { path: "userId", select: "name email" },
+          { path: "departmentId", select: "name" },
+        ],
+      });
+
+    return res.status(200).json({
       success: true,
-      message: "Status updated",
+      message: "Status updated successfully",
       data: updated,
     });
   } catch (error) {
@@ -268,17 +337,56 @@ const updateStatus = async (req, res) => {
   }
 };
 
-// CALCULATE
-
+// calculate payroll
 const calculatePayroll = async (req, res) => {
   try {
-    const { baseSalary, bonus, deductions } = req.body;
+    const userRole = req.user.role;
 
-    const netSalary = baseSalary + (bonus || 0) - (deductions || 0);
+    if (!["admin", "hr"].includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
 
-    return res.json({
+    let { baseSalary, bonus, deductions } = req.body;
+
+    if (baseSalary === undefined || baseSalary === null || baseSalary === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Base salary is required",
+      });
+    }
+
+    baseSalary = Number(baseSalary);
+    bonus = Number(bonus || 0);
+    deductions = Number(deductions || 0);
+
+    if (isNaN(baseSalary) || isNaN(bonus) || isNaN(deductions)) {
+      return res.status(400).json({
+        success: false,
+        message: "All values must be numbers",
+      });
+    }
+
+    if (baseSalary < 0 || bonus < 0 || deductions < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Values cannot be negative",
+      });
+    }
+
+    const netSalary = Number((baseSalary + bonus - deductions).toFixed(2));
+
+    return res.status(200).json({
       success: true,
-      netSalary,
+      message: "Payroll calculated successfully",
+      data: {
+        baseSalary,
+        bonus,
+        deductions,
+        netSalary,
+      },
     });
   } catch (error) {
     return res.status(500).json({
@@ -288,16 +396,56 @@ const calculatePayroll = async (req, res) => {
   }
 };
 
-// GET BY MONTH
-
+// Get payroll/:month
 const getByMonth = async (req, res) => {
   try {
-    const data = await payrollModel.find({
-      month: req.params.month,
-    });
+    const userRole = req.user.role;
+    const month = req.params.month;
 
-    return res.json({
+    if (!["admin", "hr"].includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    const regex = /^\d{4}-\d{2}$/;
+    if (!regex.test(month)) {
+      return res.status(400).json({
+        success: false,
+        message: "Month must be YYYY-MM",
+      });
+    }
+
+    const data = await payrollModel
+      .find({
+        month,
+      })
+      .populate({
+        path: "employeeId",
+        populate: [
+          {
+            path: "userId",
+            select: "name email",
+          },
+          {
+            path: "departmentId",
+            select: "name",
+          },
+        ],
+      });
+
+    if (!data.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No payroll records found",
+        data: [],
+      });
+    }
+
+    return res.status(200).json({
       success: true,
+      message: "Payroll fetched successfully",
       data,
     });
   } catch (error) {
@@ -309,7 +457,7 @@ const getByMonth = async (req, res) => {
 };
 
 module.exports = {
-  // getMyPayroll,
+  getEmployeePayroll,
   createPayroll,
   getPayrolls,
   updatePayroll,
