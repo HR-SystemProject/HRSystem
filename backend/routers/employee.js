@@ -12,40 +12,19 @@ const {
 const auth = require("../middleware/Authentication");
 const authorize = require("../middleware/Authorization");
 
+// get employees
+employeeRouter.get("/", auth, authorize(["admin", "hr"]), getEmployees);
 
-// ADMIN & HR ONLY
+// get employees/ID
+employeeRouter.get("/:id", auth, authorize(["admin", "hr"]), getEmployeeById);
 
+// Create employee
+employeeRouter.post("/", auth, authorize(["admin", "hr"]), createEmployee);
 
-// CREATE
-employeeRouter.post(
-  "/",
-  auth,
-  authorize("admin", "hr"),
-  createEmployee
-);
+// Update employees/:id
+employeeRouter.put("/:id", auth, authorize(["admin", "hr"]), updateEmployee);
 
-// UPDATE
-employeeRouter.put(
-  "/:id",
-  auth,
-  authorize("admin", "hr"),
-  updateEmployee
-);
-
-// DELETE
-employeeRouter.delete(
-  "/:id",
-  auth,
-  authorize("admin", "hr"),
-  deleteEmployee
-);
-
-
-// GET (ALL LOGGED USERS)
-
-
-employeeRouter.get("/", auth, getEmployees);
-
-employeeRouter.get("/:id", auth, getEmployeeById);
+// Delete employees/:id
+employeeRouter.delete("/:id", auth, authorize(["admin", "hr"]), deleteEmployee);
 
 module.exports = employeeRouter;

@@ -14,13 +14,13 @@ const authorize = require("../middleware/Authorization");
 const auth = require("../middleware/Authentication");
 
 // get leaveRequests
-leaveRequestRouter.get("/", auth, authorize("hr", "admin"), getLeaveRequests);
+leaveRequestRouter.get("/", auth, authorize(["hr", "admin"]), getLeaveRequests);
 
 // get leaveRequest/employee/:id
 leaveRequestRouter.get(
   "/employee/:id",
   auth,
-  authorize("hr", "admin"),
+  authorize(["hr", "admin"]),
   getLeaveRequestByEmployee,
 );
 
@@ -38,7 +38,7 @@ leaveRequestRouter.post("/", auth, createLeaveRequest);
 leaveRequestRouter.put(
   "/:id/status",
   auth,
-  authorize("hr" , "admin"),
+  authorize(["hr" , "admin"]),
   updateLeaveRequestsStatus,
 );
 

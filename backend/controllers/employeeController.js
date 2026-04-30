@@ -2,80 +2,28 @@ const employeeModel = require("../models/EmployeeSchema");
 const userModel = require("../models/UserSchema");
 const departmentModel = require("../models/DepartmentSchema");
 
-
-// CREATE EMPLOYEE (Admin & HR)
-
-const createEmployee = async (req, res) => {
-  try {
-    const {
-      userId,
-      departmentId,
-      jobTitle,
-      salary,
-      hireDate,
-      phone,
-      address,
-      status,
-    } = req.body;
-
-    if (!userId || !departmentId || !jobTitle) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields",
-      });
-    }
-
-    const user = await userModel.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    const department = await departmentModel.findById(departmentId);
-    if (!department) {
-      return res.status(404).json({
-        success: false,
-        message: "Department not found",
-      });
-    }
-
-    const newEmployee = new employeeModel({
-      userId,
-      departmentId,
-      jobTitle,
-      salary,
-      hireDate,
-      phone,
-      address,
-      status,
-    });
-
-    const result = await newEmployee.save();
-
-    return res.status(201).json({
-      success: true,
-      message: "Employee created successfully",
-      data: result,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-
-// GET ALL EMPLOYEES
-
+// Get employees
 const getEmployees = async (req, res) => {
   try {
+    const userRole = req.user.role;
+
+    if (userRole !== "admin" && userRole !== "hr") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
     const employees = await employeeModel
-      .find()
-      .populate("userId")
-      .populate("departmentId");
+      .find({})
+      .populate("userId", "name email")
+      .populate({
+        path: "departmentId",
+        populate: {
+          path: "managerId",
+          select: "name email",
+        },
+      });
 
     return res.json({
       success: true,
@@ -89,15 +37,28 @@ const getEmployees = async (req, res) => {
   }
 };
 
-
-// GET EMPLOYEE BY ID
-
+// Get employee/:id
 const getEmployeeById = async (req, res) => {
   try {
+    const userRole = req.user.role;
+
+    if (userRole !== "admin" && userRole !== "hr") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
     const employee = await employeeModel
       .findById(req.params.id)
-      .populate("userId")
-      .populate("departmentId");
+      .populate("userId", "name email")
+      .populate({
+        path: "departmentId",
+        populate: {
+          path: "managerId",
+          select: "name email",
+        },
+      });
 
     if (!employee) {
       return res.status(404).json({
@@ -118,15 +79,104 @@ const getEmployeeById = async (req, res) => {
   }
 };
 
+// Create employee (Admin & HR)
+const createEmployee = async (req, res) => {
+  try {
+    const {
+      userId,
+      departmentId,
+      jobTitle,
+      salary,
+      hireDate,
+      phone,
+      address,
+      status,
+    } = req.body;
+    const userRole = req.user.role;
 
-// UPDATE EMPLOYEE
+    if (userRole !== "admin" && userRole !== "hr") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
 
+    if (!userId || !departmentId || !jobTitle) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing data",
+      });
+    }
+
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const department = await departmentModel.findById(departmentId);
+    if (!department) {
+      return res.status(404).json({
+        success: false,
+        message: "Department not found",
+      });
+    }
+
+    const existingEmployee = await employeeModel.findOne({ userId });
+    if (existingEmployee) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee already exists for this user",
+      });
+    }
+
+    const newEmployee = new employeeModel({
+      userId,
+      departmentId,
+      jobTitle,
+      salary,
+      hireDate,
+      phone,
+      address,
+      status: status || "active",
+    });
+
+    const result = await newEmployee.save();
+
+    await result.populate("userId", "name email");
+    await result.populate("departmentId", "name");
+
+    return res.status(201).json({
+      success: true,
+      message: "Employee created successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Update employee/:id
 const updateEmployee = async (req, res) => {
   try {
+    const userRole = req.user.role;
+
+    if (userRole !== "admin" && userRole !== "hr") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
     const updated = await employeeModel.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true }
+      { new: true },
     );
 
     if (!updated) {
@@ -149,11 +199,18 @@ const updateEmployee = async (req, res) => {
   }
 };
 
-
-// DELETE EMPLOYEE
-
+// Delete employees/:id
 const deleteEmployee = async (req, res) => {
   try {
+    const userRole = req.user.role;
+
+    if (userRole !== "admin" && userRole !== "hr") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
     const employee = await employeeModel.findByIdAndDelete(req.params.id);
 
     if (!employee) {
@@ -165,7 +222,7 @@ const deleteEmployee = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Employee deleted",
+      message: "Employee deleted successfully",
     });
   } catch (error) {
     return res.status(500).json({

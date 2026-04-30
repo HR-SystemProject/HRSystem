@@ -17,6 +17,7 @@ const getTodayAttendance = async (req, res) => {
           $lte: endOfDay,
         },
       })
+      .populate("employeeId", "name email")
       .sort({ createdAt: -1 });
 
     if (!data.length) {
@@ -39,7 +40,7 @@ const getTodayAttendance = async (req, res) => {
       }
 
       return {
-         userId: item.employeeId,
+        userId: item.employeeId,
         checkIn: item.checkIn,
         checkOut: item.checkOut,
         status: item.status,
@@ -52,7 +53,6 @@ const getTodayAttendance = async (req, res) => {
       message: "Today's attendance",
       data: formatted,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -64,9 +64,9 @@ const getTodayAttendance = async (req, res) => {
 // get attendance
 const getAttendance = async (req, res) => {
   try {
-
     const data = await attendanceModel
       .find()
+      .populate("employeeId", "name email")
       .sort({ createdAt: -1 });
 
     if (!data.length) {
@@ -77,20 +77,14 @@ const getAttendance = async (req, res) => {
     }
 
     const formatted = data.map((item) => {
-
       let workingTime = null;
 
-      if(item.checkIn && item.checkOut){
-
+      if (item.checkIn && item.checkOut) {
         const diff = item.checkOut - item.checkIn;
 
-        const hours = Math.floor(
-          diff / (1000 * 60 * 60)
-        );
+        const hours = Math.floor(diff / (1000 * 60 * 60));
 
-        const minutes = Math.floor(
-          (diff % (1000 * 60 * 60)) / (1000 * 60)
-        );
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
         workingTime = `${hours}h ${minutes}m`;
       }
@@ -101,21 +95,19 @@ const getAttendance = async (req, res) => {
         checkIn: item.checkIn,
         checkOut: item.checkOut || null,
         workingTime: workingTime || "Still working",
-        status: item.status
+        status: item.status,
       };
-
     });
 
     return res.status(200).json({
       success: true,
       message: "All attendance records",
-      data: formatted
+      data: formatted,
     });
-
-  } catch(error){
+  } catch (error) {
     return res.status(500).json({
-      success:false,
-      message:error.message
+      success: false,
+      message: error.message,
     });
   }
 };
@@ -182,32 +174,60 @@ const getMonthlyAttendance = async (req, res) => {
     const employeeId = req.user.userId;
     const month = Number(req.params.month);
 
-    const result = await attendanceModel.find({
-      employeeId,
-      $expr: {
-        $eq: [{ $month: "$date" }, month],
-      },
-    });
+    const result = await attendanceModel
+      .find({
+        employeeId,
+        $expr: {
+          $eq: [{ $month: "$date" }, month],
+        },
+      })
+      .populate("employeeId", "name email");
 
     let totalHours = 0;
     let absentDays = 0;
     let lateDays = 0;
+    let totalMinutes = 0;
 
     result.forEach((item) => {
-      totalHours += item.workingHours || 0;
+      totalMinutes += (item.workingHours || 0) * 60;
 
       if (item.status === "absent") absentDays++;
       if (item.status === "late") lateDays++;
+    });
+
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = Math.floor(totalMinutes % 60);
+
+    const totalTime = `${hours}h ${minutes}m`;
+
+    const records = result.map((item) => {
+      const hoursFloat = item.workingHours || 0;
+
+      const hours = Math.floor(hoursFloat);
+      const minutes = Math.floor((hoursFloat - hours) * 60);
+
+      return {
+        _id: item._id,
+        employeeId: item.employeeId,
+        checkIn: item.checkIn,
+        checkOut: item.checkOut,
+        status: item.status,
+        date: item.date,
+
+        workingTime: `${hours}h ${minutes}m`,
+
+        workingHours: parseFloat(hoursFloat.toFixed(2)),
+      };
     });
 
     return res.status(200).json({
       success: true,
       data: {
         month,
-        totalHours,
+        totalHours: totalTime,
         absentDays,
         lateDays,
-        records: result,
+        records,
       },
     });
   } catch (error) {
@@ -218,7 +238,7 @@ const getMonthlyAttendance = async (req, res) => {
   }
 };
 
-// get Attendance/monthlyReport/:month "for Hr ans admin"
+// get Attendance/monthlyReport/:month "for Hr and admin"
 const getMonthlyAttendanceReport = async (req, res) => {
   try {
     const month = Number(req.params.month);
@@ -259,6 +279,19 @@ const getMonthlyAttendanceReport = async (req, res) => {
           },
         },
       },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "employee",
+        },
+      },
+
+      {
+        $unwind: "$employee",
+      },
     ]);
 
     if (!result.length) {
@@ -270,13 +303,17 @@ const getMonthlyAttendanceReport = async (req, res) => {
 
     const formatted = result.map((item) => {
       const hours = Math.floor(item.totalHours);
-
       const minutes = Math.round((item.totalHours - hours) * 60);
 
       const totalWorkingTime = `${hours}h ${minutes}m`;
 
       return {
-        employeeId: item._id,
+        employee: {
+          _id: item.employee._id,
+          name: item.employee.name,
+          email: item.employee.email,
+        },
+
         totalWorkingTime,
         presentDays: item.presentDays,
         lateDays: item.lateDays,
@@ -297,6 +334,7 @@ const getMonthlyAttendanceReport = async (req, res) => {
   }
 };
 
+// CheckIn
 const checkIn = async (req, res) => {
   try {
     const employeeId = req.user.userId;
@@ -322,11 +360,26 @@ const checkIn = async (req, res) => {
       });
     }
 
+    const openAttendance = await attendanceModel.findOne({
+      employeeId,
+      checkOut: null,
+    });
+
+    if (openAttendance) {
+      const endOfWork = new Date(openAttendance.checkIn);
+      endOfWork.setHours(17, 0, 0, 0);
+
+      openAttendance.checkOut = endOfWork;
+      openAttendance.workingHours = 8;
+      openAttendance.status = "forgot_checkout";
+
+      await openAttendance.save();
+    }
+
     const now = new Date();
     const currentHour = now.getHours();
 
     let status = "present";
-
     if (currentHour > 9) {
       status = "late";
     }
@@ -339,6 +392,8 @@ const checkIn = async (req, res) => {
     });
 
     const result = await attendance.save();
+
+    await result.populate("employeeId", "name email");
 
     return res.status(201).json({
       success: true,
@@ -391,7 +446,8 @@ const checkout = async (req, res) => {
 
     const result = await attendance.save();
 
-    //  ماتنسي .populate() for employee name
+    await result.populate("employeeId", "name email");
+
     return res.status(200).json({
       success: true,
       message: "Checked out successfully",
