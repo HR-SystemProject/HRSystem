@@ -1,10 +1,137 @@
 const mongoose = require("mongoose");
 const payrollModel = require("../models/payrollSchema");
+const employeeModel = require("../models/EmployeeSchema");
 
-// CREATE PAYROLL
+// Get payroll
+const getPayrolls = async (req, res) => {
+  try {
+    const userRole = req.user.role;
 
+    if (!["admin", "hr"].includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    const payrolls = await payrollModel.find({}).populate({
+      path: "employeeId",
+      populate: [
+        {
+          path: "userId",
+          select: "name email",
+        },
+        {
+          path: "departmentId",
+          select: "name",
+        },
+      ],
+    });
+
+    return res.json({
+      success: true,
+      data: payrolls,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Get payroll/employee/:id
+const getByEmployee = async (req, res) => {
+  try {
+    const userRole = req.user.role;
+    const employeeId = req.params.id;
+
+    if (!["admin", "hr"].includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    const data = await payrollModel.find({ employeeId }).populate({
+      path: "employeeId",
+      populate: [
+        {
+          path: "userId",
+          select: "name email",
+        },
+        {
+          path: "departmentId",
+          select: "name",
+        },
+      ],
+    });
+
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// // Get /payroll/my
+// const getMyPayroll = async (req, res) => {
+//   try {
+//     const userId = req.user.userId;
+
+//     // const employee = await employeeModel.findOne({ userId });
+
+//     console.log("USER ID:", req.user.userId);
+
+//     const employee = await employeeModel.findOne({ userId: req.user.userId });
+//     console.log("EMPLOYEE:", employee);
+
+//     if (!employee) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Employee not found",
+//       });
+//     }
+
+//     const data = await payrollModel
+//       .find({ employeeId: employee._id })
+//       .populate({
+//         path: "employeeId",
+//         populate: [
+//           { path: "userId", select: "name email" },
+//           { path: "departmentId", select: "name" },
+//         ],
+//       });
+
+//     return res.status(200).json({
+//       success: true,
+//       data,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
+// Create payroll
 const createPayroll = async (req, res) => {
   try {
+    const userRole = req.user.role;
+
+    if (!["admin", "hr"].includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
     const { employeeId, month, baseSalary, bonus, deductions, paymentDate } =
       req.body;
 
@@ -42,7 +169,8 @@ const createPayroll = async (req, res) => {
       });
     }
 
-    const netSalary = baseSalary + (bonus || 0) - (deductions || 0);
+    const netSalary =
+      Number(baseSalary) + Number(bonus || 0) - Number(deductions || 0);
 
     const newPayroll = new payrollModel({
       employeeId,
@@ -51,11 +179,12 @@ const createPayroll = async (req, res) => {
       bonus,
       deductions,
       netSalary,
-      paymentDate,
+      paymentDate: paymentDate || null,
       status: "pending",
     });
 
     const result = await newPayroll.save();
+    await result.populate("employeeId", "name email jobTitle");
 
     return res.status(201).json({
       success: true,
@@ -70,26 +199,7 @@ const createPayroll = async (req, res) => {
   }
 };
 
-// GET ALL
-
-const getPayrolls = async (req, res) => {
-  try {
-    const payrolls = await payrollModel.find().populate("employeeId");
-
-    return res.json({
-      success: true,
-      data: payrolls,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
 // UPDATE PAYROLL
-
 const updatePayroll = async (req, res) => {
   try {
     const { baseSalary, bonus, deductions } = req.body;
@@ -178,38 +288,6 @@ const calculatePayroll = async (req, res) => {
   }
 };
 
-// GET BY EMPLOYEE
-
-const getByEmployee = async (req, res) => {
-  try {
-    // حماية: user يشوف حاله فقط
-    if (
-      req.token.role !== "admin" &&
-      req.token.role !== "hr" &&
-      req.token.userId !== req.params.id
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Forbidden",
-      });
-    }
-
-    const data = await payrollModel
-      .find({ employeeId: req.params.id })
-      .populate("employeeId");
-
-    return res.json({
-      success: true,
-      data,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
 // GET BY MONTH
 
 const getByMonth = async (req, res) => {
@@ -231,6 +309,7 @@ const getByMonth = async (req, res) => {
 };
 
 module.exports = {
+  // getMyPayroll,
   createPayroll,
   getPayrolls,
   updatePayroll,

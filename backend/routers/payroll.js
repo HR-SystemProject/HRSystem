@@ -2,6 +2,7 @@ const express = require("express");
 const payrollRouter = express.Router();
 
 const {
+  // getMyPayroll,
   createPayroll,
   getPayrolls,
   updatePayroll,
@@ -15,16 +16,19 @@ const authorize = require("../middleware/Authorization");
 const auth = require("../middleware/Authentication");
 
 // Get payroll
-payrollRouter.put("/", getPayrolls);
+payrollRouter.get("/",auth,authorize(["admin","hr"]), getPayrolls);
 
 // Get payroll/employee/:id
-payrollRouter.get("/employee/:id", getByEmployee);
+payrollRouter.get("/employee/:id",auth, authorize(["admin","hr"]), getByEmployee);
+
+// // Get /payroll/my
+// payrollRouter.get("/my",auth,getByEmployee);
 
 // Get payroll/month/:month
 payrollRouter.get("/month/:month", getByMonth);
 
 // Create payroll
-payrollRouter.post("/", createPayroll);
+payrollRouter.post("/", auth, authorize(["admin","hr"]),createPayroll);
 
 // Calculate payroll
 payrollRouter.post("/calculate", calculatePayroll);

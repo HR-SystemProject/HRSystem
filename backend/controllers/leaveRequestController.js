@@ -13,7 +13,10 @@ const getLeaveRequests = async (req, res) => {
       });
     }
 
-    const leaveRequests = await leaveRequestModel.find({});
+    const leaveRequests = await leaveRequestModel
+      .find({})
+      .populate("employeeId", "name email")
+      .populate("approvedBy", "name email");
 
     res.status(200).json({
       success: true,
@@ -33,9 +36,19 @@ const getLeaveRequestByEmployee = async (req, res) => {
   try {
     const employeeId = req.params.id;
 
-    const leaveRequests = await leaveRequestModel.find({
-      employeeId,
-    });
+    const leaveRequests = await leaveRequestModel
+      .find({
+        employeeId,
+      })
+      .populate("employeeId", "name email")
+      .populate("approvedBy", "name email");
+
+    if (!leaveRequests || leaveRequests.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No leave requests found for this employee",
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -55,9 +68,12 @@ const getEmployeeLeaveRequests = async (req, res) => {
   try {
     const employeeId = req.user.userId;
 
-    const leaveRequests = await leaveRequestModel.find({
-      employeeId,
-    });
+    const leaveRequests = await leaveRequestModel
+      .find({
+        employeeId,
+      })
+      .populate("employeeId", "name email")
+      .populate("approvedBy", "name email");
 
     res.status(200).json({
       success: true,
@@ -77,7 +93,6 @@ const createLeaveRequest = async (req, res) => {
   try {
     const { leaveType, startDate, endDate, reason } = req.body;
     const employeeId = req.user.userId;
-    console.log(employeeId);
 
     if (!leaveType || !startDate || !endDate) {
       return res.status(400).json({
@@ -101,7 +116,26 @@ const createLeaveRequest = async (req, res) => {
       reason,
     });
 
+    const existingLeave = await leaveRequestModel.findOne({
+      employeeId,
+      $or: [
+        {
+          startDate: { $lte: endDate },
+          endDate: { $gte: startDate },
+        },
+      ],
+    });
+
+    if (existingLeave) {
+      return res.status(400).json({
+        success: false,
+        message: "You already have a leave request in this period",
+      });
+    }
+
     await leaveRequest.save();
+
+    await leaveRequest.populate("employeeId", "name email");
 
     res.status(201).json({
       success: true,
@@ -150,6 +184,10 @@ const updateLeaveRequestsStatus = async (req, res) => {
     leaveRequest.approvedBy = managerId;
 
     const result = await leaveRequest.save();
+
+    await result.populate("employeeId", "name email");
+    await result.populate("approvedBy", "name email");
+
     res.status(200).json({
       success: true,
       message: `Leave request ${status} successfully`,
