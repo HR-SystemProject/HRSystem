@@ -1,5 +1,10 @@
+// Root layout for the entire application
+// Wraps all pages
+// Includes global providers (AuthProvider)
+// No authentication logic here
+
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import "../styles/globals.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 export const metadata = {

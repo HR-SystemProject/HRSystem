@@ -1,0 +1,1 @@
+//  Stores constant values (API URL, statuses)

@@ -1,0 +1,1 @@
+// Defines roles (admin, hr, employee)
