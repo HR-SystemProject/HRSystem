@@ -1,0 +1,1 @@
+// Protects pages based on role
