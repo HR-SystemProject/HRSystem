@@ -184,22 +184,42 @@ const updateProfile = async (req, res) => {
 };
 
 // FORGET PASSWORD
+const crypto = require("crypto");
+
 const forgetPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await userModel.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({
+    if (!email) {
+      return res.status(400).json({
         success: false,
-        message: "User not found",
+        message: "Email is required",
       });
     }
 
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return res.json({
+        success: true,
+        message: "If this email exists, a reset link has been sent",
+      });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = await bcrypt.hash(resetToken, 10);
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+
+    await user.save();
+
+    const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
+
     return res.json({
       success: true,
-      message: "Reset link sent (mock)",
+      message: "Reset link sent",
+      resetLink,
     });
   } catch (error) {
     return res.status(500).json({
@@ -208,38 +228,57 @@ const forgetPassword = async (req, res) => {
     });
   }
 };
-
 // CHANGE PASSWORD
 const changePassword = async (req, res) => {
   try {
-    const { oldPassword, newPassword } = req.body;
+    const { token, newPassword } = req.body;
 
-    const user = await userModel.findById(req.params.id);
-
-    if (!user) {
-      return res.status(404).json({
+    if (!token || !newPassword) {
+      return res.status(400).json({
         success: false,
-        message: "User not found",
+        message: "Token and new password are required",
       });
     }
 
-    const isMatch = await bcrypt.compare(oldPassword, user.password);
-
-    if (!isMatch) {
+    if (newPassword.length < 6) {
       return res.status(400).json({
         success: false,
-        message: "Old password is incorrect",
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    const users = await userModel.find({
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    let validUser = null;
+
+    for (let user of users) {
+      const isMatch = await bcrypt.compare(token, user.resetPasswordToken);
+      if (isMatch) {
+        validUser = user;
+        break;
+      }
+    }
+
+    if (!validUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired token",
       });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    user.password = hashedPassword;
-    await user.save();
+    validUser.password = hashedPassword;
+    validUser.resetPasswordToken = undefined;
+    validUser.resetPasswordExpires = undefined;
+
+    await validUser.save();
 
     return res.json({
       success: true,
-      message: "Password updated successfully",
+      message: "Password reset successful",
     });
   } catch (error) {
     return res.status(500).json({
@@ -248,7 +287,6 @@ const changePassword = async (req, res) => {
     });
   }
 };
-
 // Admin: Get users
 const getUsers = async (req, res) => {
   try {

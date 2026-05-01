@@ -16,6 +16,12 @@ const UserSchema = new mongoose.Schema(
     role: { type: mongoose.Schema.Types.ObjectId, ref: "Role" },
     isActive: { type: Boolean, default: true },
     profileImage: { type: String },
+    resetPasswordToken: {
+  type: String,
+},
+resetPasswordExpires: {
+  type: Date,
+},
   },
   { timestamps: true },
 );
