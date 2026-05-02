@@ -5,5 +5,12 @@ export const getUser = () => {
   return user ? JSON.parse(user) : null;
 };
 
-export const getUserId = () => getUser()?.id;
-export const getRole = () => getUser()?.role;
+export const getUserId = () => {
+  const user = getUser();
+  return user ? user._id || user.id : null;
+};
+
+export const getRole = () => {
+  const user = getUser();
+  return user?.role || null;
+};
