@@ -7,6 +7,15 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "../styles/globals.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
 export const metadata = {
   title: "Create Next App",

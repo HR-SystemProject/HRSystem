@@ -3,7 +3,6 @@ import { useState } from "react";
 import Tabs from "./components/Tabs";
 import TodayTab from "./components/TodayTab";
 import MonthlyTab from "./components/MonthlyTab";
-import HistoryTab from "./components/HistoryTab";
 import AllRecordsTab from "./components/AllRecordsTab";
 
 export default function AttendancePage() {
@@ -14,7 +13,6 @@ export default function AttendancePage() {
 
       {activeTab === "today" && <TodayTab />}
       {activeTab === "monthly" && <MonthlyTab />}
-      {activeTab === "history" && <HistoryTab />}
       {activeTab === "all" && <AllRecordsTab />}
     </div>
   );

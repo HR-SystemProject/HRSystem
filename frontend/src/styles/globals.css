@@ -8,3 +8,25 @@
   transform: translateY(-2px);
   transition: 0.2s;
 }
+
+button {
+  border: none;
+  outline: none;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); 
+  border-radius: 6px;
+}
+
+.transition-card {
+  transition: all 0.2s ease;
+}
+
+.transition-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
