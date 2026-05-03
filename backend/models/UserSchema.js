@@ -12,16 +12,20 @@ const UserSchema = new mongoose.Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
     },
+    departmentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Department",
+    },
     password: { type: String, required: true, minlength: 6 },
     role: { type: mongoose.Schema.Types.ObjectId, ref: "Role" },
     isActive: { type: Boolean, default: true },
     profileImage: { type: String },
     resetPasswordToken: {
-  type: String,
-},
-resetPasswordExpires: {
-  type: Date,
-},
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
+    },
   },
   { timestamps: true },
 );

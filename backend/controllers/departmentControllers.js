@@ -1,5 +1,6 @@
 const departmentModel = require("../models/DepartmentSchema");
 const employeeModel = require("../models/EmployeeSchema");
+const userModel = require("../models/UserSchema");
 
 // get Departments
 const getDepartments = async (req, res) => {
@@ -50,7 +51,9 @@ const getDepartmentsById = async (req, res) => {
       });
     }
 
-    const departments = await departmentModel.findById(departmentId);
+    const departments = await departmentModel
+      .findById(departmentId)
+      .populate("managerId", "name email");
 
     if (!departments) {
       return res.status(404).json({
@@ -59,10 +62,17 @@ const getDepartmentsById = async (req, res) => {
       });
     }
 
+    const employees = await userModel
+      .find({ departmentId })
+      .select("name email");
+
     return res.status(200).json({
       success: true,
       message: "Department found",
-      data: departments,
+      data: {
+        ...departments.toObject(),
+        employees: employees,
+      },
     });
   } catch (error) {
     return res.status(500).json({
@@ -95,8 +105,15 @@ const createDepartments = async (req, res) => {
     const newDepartment = new departmentModel({
       name,
       description,
-      managerId: req.user.userId,
+      managerId: req.body.managerId,
     });
+
+    if (!req.body.managerId) {
+      return res.status(400).json({
+        success: false,
+        message: "Manager is required",
+      });
+    }
 
     const result = await newDepartment.save();
 
@@ -128,7 +145,7 @@ const updateDepartments = async (req, res) => {
       {
         name,
         description,
-        managerId: req.user.userId,
+        managerId: req.body.managerId,
       },
       {
         new: true,
