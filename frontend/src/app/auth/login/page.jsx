@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
-import { login } from "../../services/user";
+// import { login } from "../../services/users";
+import { login } from "@/services/users";
 
-export default function Login() {
+export default function Page() {
   const [form, setForm] = useState({ email: "", password: "" });
 
   const handleChange = (e) =>

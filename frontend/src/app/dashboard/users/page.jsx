@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getUsers, deleteUser } from "../../../services/user";
+import { getUsers, deleteUser } from "../../../services/users";
 import { FaEye, FaTrash } from "react-icons/fa";
 
 export default function UsersPage() {
