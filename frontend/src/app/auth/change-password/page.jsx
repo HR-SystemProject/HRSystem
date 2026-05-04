@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { changePassword } from "../../services/user";
 
-export default function ChangePassword() {
+export default function Page() {
   const [form, setForm] = useState({
     token: "",
     newPassword: "",
