@@ -5,7 +5,7 @@ import {
 getUsers,
 getUserById,
 deleteUser,
-} from "../../../services/user";
+} from "../../../services/users";
 import { FaEye, FaTrash } from "react-icons/fa";
 
 export default function Page() {

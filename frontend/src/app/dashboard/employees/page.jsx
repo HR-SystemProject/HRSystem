@@ -7,7 +7,7 @@ import {
   createEmployee,
   updateEmployee,
   deleteEmployee,
-} from "../../../services/employee";
+} from "../../../services/employees";
 
 import { FaEye, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 
@@ -113,7 +113,6 @@ export default function EmployeesPage() {
 
   return (
     <div className="container py-5">
-
       {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold">Employees Management</h3>
@@ -132,24 +131,15 @@ export default function EmployeesPage() {
           <div key={emp._id} className="col-md-6">
             <div className="card shadow-sm border-0 h-100 transition-card">
               <div className="card-body">
+                <h5 className="fw-bold">{emp.userId?.name}</h5>
 
-                <h5 className="fw-bold">
-                  {emp.userId?.name}
-                </h5>
+                <p className="mb-1 text-muted">{emp.jobTitle}</p>
 
-                <p className="mb-1 text-muted">
-                  {emp.jobTitle}
-                </p>
-
-                <p className="mb-1">
-                  Department: {emp.departmentId?.name}
-                </p>
+                <p className="mb-1">Department: {emp.departmentId?.name}</p>
 
                 <p className="mb-3">
                   Status:{" "}
-                  <span className="badge bg-secondary">
-                    {emp.status}
-                  </span>
+                  <span className="badge bg-secondary">{emp.status}</span>
                 </p>
 
                 <div className="d-flex gap-2 mt-auto">
@@ -174,7 +164,6 @@ export default function EmployeesPage() {
                     <FaTrash /> Delete
                   </button>
                 </div>
-
               </div>
             </div>
           </div>
@@ -183,11 +172,14 @@ export default function EmployeesPage() {
 
       {/* CREATE MODAL */}
       {showModal && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-             style={{ background: "rgba(0,0,0,0.5)", zIndex: 9999 }}>
-
-          <div className="bg-white p-4 rounded shadow" style={{ width: "450px" }}>
-
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{ background: "rgba(0,0,0,0.5)", zIndex: 9999 }}
+        >
+          <div
+            className="bg-white p-4 rounded shadow"
+            style={{ width: "450px" }}
+          >
             <h5 className="fw-bold mb-3">Create Employee</h5>
 
             <input
@@ -240,25 +232,24 @@ export default function EmployeesPage() {
                 Cancel
               </button>
 
-              <button
-                className="btn btn-success"
-                onClick={handleCreate}
-              >
+              <button className="btn btn-success" onClick={handleCreate}>
                 Create
               </button>
             </div>
-
           </div>
         </div>
       )}
 
       {/* VIEW MODAL */}
       {selectedEmployee && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-             style={{ background: "rgba(0,0,0,0.5)", zIndex: 9999 }}>
-
-          <div className="bg-white p-4 rounded shadow" style={{ width: "400px" }}>
-
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{ background: "rgba(0,0,0,0.5)", zIndex: 9999 }}
+        >
+          <div
+            className="bg-white p-4 rounded shadow"
+            style={{ width: "400px" }}
+          >
             <h5>{selectedEmployee.userId?.name}</h5>
 
             <p>Job Title: {selectedEmployee.jobTitle}</p>
@@ -271,18 +262,20 @@ export default function EmployeesPage() {
             >
               Close
             </button>
-
           </div>
         </div>
       )}
 
       {/* EDIT MODAL */}
       {editEmployee && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-             style={{ background: "rgba(0,0,0,0.5)", zIndex: 9999 }}>
-
-          <div className="bg-white p-4 rounded shadow" style={{ width: "400px" }}>
-
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{ background: "rgba(0,0,0,0.5)", zIndex: 9999 }}
+        >
+          <div
+            className="bg-white p-4 rounded shadow"
+            style={{ width: "400px" }}
+          >
             <h5>Edit Employee</h5>
 
             <input
@@ -299,24 +292,23 @@ export default function EmployeesPage() {
               className="form-control mb-3"
             />
 
-            <button
-              className="btn btn-warning w-100"
-              onClick={handleUpdate}
-            >
+            <button className="btn btn-warning w-100" onClick={handleUpdate}>
               Update
             </button>
-
           </div>
         </div>
       )}
 
       {/* DELETE MODAL */}
       {deleteId && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-             style={{ background: "rgba(0,0,0,0.5)", zIndex: 9999 }}>
-
-          <div className="bg-white p-4 rounded shadow" style={{ width: "350px" }}>
-
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{ background: "rgba(0,0,0,0.5)", zIndex: 9999 }}
+        >
+          <div
+            className="bg-white p-4 rounded shadow"
+            style={{ width: "350px" }}
+          >
             <h5>Are you sure?</h5>
 
             <div className="d-flex gap-2 mt-3">
@@ -327,18 +319,13 @@ export default function EmployeesPage() {
                 Cancel
               </button>
 
-              <button
-                className="btn btn-danger w-100"
-                onClick={handleDelete}
-              >
+              <button className="btn btn-danger w-100" onClick={handleDelete}>
                 Delete
               </button>
             </div>
-
           </div>
         </div>
       )}
-
     </div>
   );
 }
