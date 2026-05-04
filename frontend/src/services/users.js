@@ -1,34 +1,80 @@
+import axios from "axios";
 
-import { API } from "./api";
+const API = "http://localhost:5000/users";
 
-// POST /users/signup
-export const signup = (data) => API.post("/users/signup", data);
+/* AUTH */
 
-// POST /users/login
-export const login = (data) => API.post("/users/login", data);
+// SIGNUP
+export const signup = (data) => {
+  return axios.post(`${API}/signup`, data);
+};
 
-// POST /users/logout
-export const logout = () => API.post("/users/logout");
+// LOGIN
+export const login = (data) => {
+  return axios.post(`${API}/login`, data);
+};
 
-// PUT /users/:id/profile
-export const updateProfile = (id, data) =>
-  API.put(`/users/${id}/profile`, data);
+// LOGOUT
+export const logout = () => {
+  return axios.post(
+    `${API}/logout`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    }
+  );
+};
 
-// POST /users/forget-password
-export const forgetPassword = (data) =>
-  API.post("/users/forget-password", data);
+/* USERS CRUD (ADMIN)*/
 
-// POST /users/:id/change-password
-export const changePassword = (id, data) =>
-  API.post(`/users/${id}/change-password`, data);
+// GET ALL USERS
+export const getUsers = () => {
+  return axios.get(`${API}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+};
 
-// ADMIN
+// GET USER BY ID
+export const getUserById = (id) => {
+  return axios.get(`${API}/${id}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+};
 
-// GET /users
-export const getUsers = () => API.get("/users");
+// DELETE USER
+export const deleteUser = (id) => {
+  return axios.delete(`${API}/${id}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+};
 
-// GET /users/:id
-export const getUserById = (id) => API.get(`/users/${id}`);
+/*PASSWORD*/
 
-// DELETE /users/:id
-export const deleteUser = (id) => API.delete(`/users/${id}`);
+// FORGET PASSWORD
+export const forgetPassword = (data) => {
+  return axios.post(`${API}/forget-password`, data);
+};
+
+// CHANGE PASSWORD
+export const changePassword = (data) => {
+  return axios.post(`${API}/change-password`, data);
+};
+
+/* PROFILE*/
+
+// UPDATE PROFILE
+export const updateProfile = (id, data) => {
+  return axios.put(`${API}/${id}/profile`, data, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+};

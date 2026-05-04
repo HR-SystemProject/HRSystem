@@ -1,18 +1,20 @@
 "use client";
 import { useState } from "react";
-import { login } from "../../services/user";
+import { changePassword } from "../../services/user";
 
-export default function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
+export default function ChangePassword() {
+  const [form, setForm] = useState({
+    token: "",
+    newPassword: "",
+  });
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async () => {
     try {
-      const res = await login(form);
-      localStorage.setItem("token", res.data.token);
-      alert("Login successful");
+      await changePassword(form);
+      alert("Password changed");
     } catch (err) {
       console.log(err);
     }
@@ -21,25 +23,25 @@ export default function Login() {
   return (
     <div className="container py-5 d-flex justify-content-center">
       <div className="card shadow-sm p-4 transition-card" style={{ width: "400px" }}>
-        <h4 className="fw-bold mb-3 text-center">Login</h4>
+        <h4 className="fw-bold text-center mb-3">Change Password</h4>
 
         <input
-          name="email"
+          name="token"
           className="form-control mb-2"
-          placeholder="Email"
+          placeholder="Token"
           onChange={handleChange}
         />
 
         <input
-          name="password"
+          name="newPassword"
           type="password"
           className="form-control mb-3"
-          placeholder="Password"
+          placeholder="New Password"
           onChange={handleChange}
         />
 
-        <button className="btn btn-success w-100" onClick={handleSubmit}>
-          Login
+        <button className="btn btn-primary w-100" onClick={handleSubmit}>
+          Change Password
         </button>
       </div>
     </div>
