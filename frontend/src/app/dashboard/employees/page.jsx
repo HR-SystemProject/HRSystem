@@ -7,7 +7,7 @@ import {
   createEmployee,
   updateEmployee,
   deleteEmployee,
-} from "../../../services/employee";
+} from "../../../services/employees";
 
 import { getDepartments } from "../../../services/departments";
 
