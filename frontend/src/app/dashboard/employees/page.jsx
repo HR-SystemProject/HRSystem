@@ -7,11 +7,15 @@ import {
   createEmployee,
   updateEmployee,
   deleteEmployee,
+} from "../../../services/employees";
+
+import { FaEye, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+
+export default function EmployeesPage() {
 } from "../../../services/employee";
 
 import { FaEye, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 
-export default function Page() {
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 

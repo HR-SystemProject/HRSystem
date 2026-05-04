@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { signup } from "../../services/user";
+import { signup } from "../../../services/users";
 
 export default function Signup() {
   const [form, setForm] = useState({
