@@ -1,21 +1,17 @@
 import { API } from "./api";
 
-// POST /employees
-export const createEmployee = (data) =>
-  API.post("/employees", data);
+// GET all employees
+export const getEmployees = () => API.get("/employees");
 
-// GET /employees
-export const getEmployees = () =>
-  API.get("/employees");
+// GET employee by id
+export const getEmployeeById = (id) => API.get(`/employees/${id}`);
 
-// GET /employees/:id
-export const getEmployeeById = (id) =>
-  API.get(`/employees/${id}`);
+// CREATE employee (NO userId here)
+export const createEmployee = (data) => API.post("/employees", data);
 
-// PUT /employees/:id
+// UPDATE employee
 export const updateEmployee = (id, data) =>
   API.put(`/employees/${id}`, data);
 
-// DELETE /employees/:id
-export const deleteEmployee = (id) =>
-  API.delete(`/employees/${id}`);
+// DELETE employee
+export const deleteEmployee = (id) => API.delete(`/employees/${id}`);
