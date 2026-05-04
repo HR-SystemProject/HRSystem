@@ -1,39 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import {
   getEmployees,
+  getEmployeeById,
   createEmployee,
   updateEmployee,
   deleteEmployee,
-} from "../../../services/employees";
+} from "../../../services/employee";
 
-import { getDepartments } from "../../../services/departments";
+import { FaEye, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 
-import { FaPlus, FaTrash, FaEdit } from "react-icons/fa";
-
-export default function EmployeesPage() {
+export default function Page() {
   const [employees, setEmployees] = useState([]);
-  const [departments, setDepartments] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
   const [editEmployee, setEditEmployee] = useState(null);
-
   const [deleteId, setDeleteId] = useState(null);
 
   const [formData, setFormData] = useState({
+    userId: "",
+    departmentId: "",
     jobTitle: "",
     salary: "",
+    hireDate: "",
     phone: "",
-    departmentId: "",
+    address: "",
     status: "active",
   });
 
-  const [errors, setErrors] = useState({});
-
   useEffect(() => {
     fetchEmployees();
-    fetchDepartments();
   }, []);
 
   const fetchEmployees = async () => {
@@ -45,49 +43,26 @@ export default function EmployeesPage() {
     }
   };
 
-  const fetchDepartments = async () => {
-    try {
-      const res = await getDepartments();
-      setDepartments(res.data.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  // ---------------- VALIDATION ----------------
-  const validate = (data) => {
-    let err = {};
-
-    if (!data.jobTitle) err.jobTitle = "Job title is required";
-
-    if (!data.departmentId) err.departmentId = "Department is required";
-
-    if (!data.salary || data.salary <= 0)
-      err.salary = "Salary must be greater than 0";
-
-    return err;
-  };
-
-  // ---------------- CHANGE ----------------
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  // ---------------- CREATE ----------------
+  // CREATE
   const handleCreate = async () => {
-    const err = validate(formData);
-    setErrors(err);
-
-    if (Object.keys(err).length > 0) return;
-
     try {
       await createEmployee(formData);
       setShowModal(false);
       setFormData({
+        userId: "",
+        departmentId: "",
         jobTitle: "",
         salary: "",
+        hireDate: "",
         phone: "",
-        departmentId: "",
+        address: "",
         status: "active",
       });
       fetchEmployees();
@@ -96,7 +71,39 @@ export default function EmployeesPage() {
     }
   };
 
-  // ---------------- DELETE ----------------
+  // VIEW
+  const handleView = async (id) => {
+    try {
+      const res = await getEmployeeById(id);
+      setSelectedEmployee(res.data.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  // EDIT
+  const handleEditClick = (emp) => {
+    setEditEmployee(emp);
+  };
+
+  const handleEditChange = (e) => {
+    setEditEmployee({
+      ...editEmployee,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleUpdate = async () => {
+    try {
+      await updateEmployee(editEmployee._id, editEmployee);
+      setEditEmployee(null);
+      fetchEmployees();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  // DELETE
   const handleDelete = async () => {
     try {
       await deleteEmployee(deleteId);
@@ -107,159 +114,211 @@ export default function EmployeesPage() {
     }
   };
 
-  // ---------------- UI ----------------
   return (
-    <div className="container py-4">
+    <div className="container py-5">
 
       {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3 className="fw-bold">Employees</h3>
+        <h3 className="fw-bold">Employees Management</h3>
 
         <button
           className="btn btn-success d-flex align-items-center gap-2"
           onClick={() => setShowModal(true)}
         >
-          <FaPlus />
-          Add Employee
+          <FaPlus /> Add Employee
         </button>
       </div>
 
       {/* CARDS */}
       <div className="row g-3">
         {employees.map((emp) => (
-          <div key={emp._id} className="col-md-4">
-            <div className="card transition-card shadow-sm p-3">
+          <div key={emp._id} className="col-md-6">
+            <div className="card shadow-sm border-0 h-100">
+              <div className="card-body">
 
-              <h5 className="fw-bold">{emp.jobTitle}</h5>
+                <h5 className="fw-bold">
+                  {emp.userId?.name}
+                </h5>
 
-              <p className="mb-1">Salary: {emp.salary}</p>
-              <p className="mb-1">Phone: {emp.phone}</p>
-              <p className="mb-1">
-                Department: {emp.departmentId?.name}
-              </p>
+                <p className="mb-1 text-muted">
+                  {emp.jobTitle}
+                </p>
 
-              <div className="d-flex gap-2 mt-3">
-                <button
-                  className="btn btn-outline-warning btn-sm"
-                  onClick={() => setEditEmployee(emp)}
-                >
-                  <FaEdit />
-                </button>
+                <p className="mb-1">
+                  Department: {emp.departmentId?.name}
+                </p>
 
-                <button
-                  className="btn btn-outline-danger btn-sm"
-                  onClick={() => setDeleteId(emp._id)}
-                >
-                  <FaTrash />
-                </button>
+                <p className="mb-3">
+                  Status:{" "}
+                  <span className="badge bg-secondary">
+                    {emp.status}
+                  </span>
+                </p>
+
+                <div className="d-flex gap-2">
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => handleView(emp._id)}
+                  >
+                    <FaEye /> View
+                  </button>
+
+                  <button
+                    className="btn btn-sm btn-outline-warning"
+                    onClick={() => handleEditClick(emp)}
+                  >
+                    <FaEdit /> Edit
+                  </button>
+
+                  <button
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={() => setDeleteId(emp._id)}
+                  >
+                    <FaTrash /> Delete
+                  </button>
+                </div>
+
               </div>
-
             </div>
           </div>
         ))}
       </div>
 
-      {/* ---------------- CREATE MODAL ---------------- */}
+      {/* CREATE MODAL */}
       {showModal && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }}
-        >
-          <div className="bg-white p-4 rounded shadow transition-card"
-            style={{ width: "500px", maxWidth: "95%" }}
-          >
+        <div className="modal-backdrop-custom">
+          <div className="modal-box">
+            <h5>Create Employee</h5>
 
-            <h5 className="fw-bold mb-3">Create Employee</h5>
+            <input
+              name="userId"
+              placeholder="User ID"
+              className="form-control my-2"
+              onChange={handleChange}
+            />
+
+            <input
+              name="departmentId"
+              placeholder="Department ID"
+              className="form-control my-2"
+              onChange={handleChange}
+            />
 
             <input
               name="jobTitle"
               placeholder="Job Title"
-              className="form-control mb-2"
+              className="form-control my-2"
               onChange={handleChange}
             />
-            {errors.jobTitle && <small className="text-danger">{errors.jobTitle}</small>}
 
             <input
               name="salary"
-              type="number"
               placeholder="Salary"
-              className="form-control mb-2"
+              className="form-control my-2"
               onChange={handleChange}
             />
-            {errors.salary && <small className="text-danger">{errors.salary}</small>}
 
             <input
               name="phone"
               placeholder="Phone"
-              className="form-control mb-2"
+              className="form-control my-2"
               onChange={handleChange}
             />
 
-            {/* Department Dropdown */}
-            <select
-              name="departmentId"
-              className="form-select mb-2"
+            <input
+              name="address"
+              placeholder="Address"
+              className="form-control my-2"
               onChange={handleChange}
-            >
-              <option value="">Select Department</option>
-              {departments.map((d) => (
-                <option key={d._id} value={d._id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
-            {errors.departmentId && (
-              <small className="text-danger">{errors.departmentId}</small>
-            )}
+            />
 
-            {/* Status */}
-            <select
-              name="status"
-              className="form-select mb-3"
-              onChange={handleChange}
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-
-            <div className="d-flex justify-content-end gap-2">
+            <div className="d-flex justify-content-end gap-2 mt-3">
               <button
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary"
                 onClick={() => setShowModal(false)}
               >
                 Cancel
               </button>
 
               <button
-                className="btn btn-success btn-sm"
+                className="btn btn-success"
                 onClick={handleCreate}
               >
                 Create
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW MODAL */}
+      {selectedEmployee && (
+        <div className="modal-backdrop-custom">
+          <div className="modal-box">
+            <h5>{selectedEmployee.userId?.name}</h5>
+
+            <p>Job Title: {selectedEmployee.jobTitle}</p>
+            <p>Phone: {selectedEmployee.phone}</p>
+            <p>Salary: {selectedEmployee.salary}</p>
+
+            <button
+              className="btn btn-secondary w-100"
+              onClick={() => setSelectedEmployee(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT MODAL */}
+      {editEmployee && (
+        <div className="modal-backdrop-custom">
+          <div className="modal-box">
+
+            <h5>Edit Employee</h5>
+
+            <input
+              name="jobTitle"
+              value={editEmployee.jobTitle}
+              onChange={handleEditChange}
+              className="form-control my-2"
+            />
+
+            <input
+              name="salary"
+              value={editEmployee.salary}
+              onChange={handleEditChange}
+              className="form-control my-2"
+            />
+
+            <button
+              className="btn btn-warning w-100"
+              onClick={handleUpdate}
+            >
+              Update
+            </button>
 
           </div>
         </div>
       )}
 
-      {/* ---------------- DELETE MODAL ---------------- */}
+      {/* DELETE MODAL */}
       {deleteId && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-          style={{ background: "rgba(0,0,0,0.5)" }}
-        >
-          <div className="bg-white p-4 rounded shadow">
-
+        <div className="modal-backdrop-custom">
+          <div className="modal-box">
             <h5>Are you sure?</h5>
 
-            <div className="d-flex justify-content-end gap-2 mt-3">
+            <div className="d-flex gap-2">
               <button
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary w-100"
                 onClick={() => setDeleteId(null)}
               >
                 Cancel
               </button>
 
               <button
-                className="btn btn-danger btn-sm"
+                className="btn btn-danger w-100"
                 onClick={handleDelete}
               >
                 Delete

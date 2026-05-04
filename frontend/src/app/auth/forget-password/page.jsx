@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { forgetPassword } from "../../services/user";
 
-export default function ForgetPassword() {
+export default function Page() {
   const [email, setEmail] = useState("");
 
   const handleSubmit = async () => {
