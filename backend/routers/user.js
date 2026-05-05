@@ -11,6 +11,7 @@ const {
   getUsers,
   getUserById,
   deleteUser,
+  updateUser,
 } = require("../controllers/userController");
 
 const authorize = require("../middleware/Authorization");
@@ -44,5 +45,8 @@ userRouter.get("/:id", auth, authorize("admin"), getUserById);
 
 // Delete users/:id
 userRouter.delete("/:id", auth, authorize("admin"), deleteUser);
+
+// Admin: update user information
+userRouter.put("/:id", auth, authorize("admin"), updateUser);
 
 module.exports = userRouter;

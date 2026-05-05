@@ -1,10 +1,16 @@
 const mongoose = require("mongoose");
 const leaveRequestModel = require("../models/leaveRequestSchema");
+const leaveRequestSchema = require("../models/leaveRequestSchema");
 
 // get leaveRequests/
 const getLeaveRequests = async (req, res) => {
   try {
     const userRole = req.user.role;
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const search = req.query.search || "";
+    const skip = (page - 1) * limit;
 
     if (userRole !== "admin" && userRole !== "hr") {
       return res.status(403).json({
@@ -13,15 +19,28 @@ const getLeaveRequests = async (req, res) => {
       });
     }
 
-    const leaveRequests = await leaveRequestModel
+    let leaveRequests = await leaveRequestModel
       .find({})
       .populate("employeeId", "name email")
       .populate("approvedBy", "name email");
 
+    if (search) {
+      leaveRequests = leaveRequests.filter((req) =>
+        req.employeeId?.name?.toLowerCase().includes(search.toLowerCase()),
+      );
+    }
+
+    const total = leaveRequests.length;
+
+    const paginated = leaveRequests.slice(skip, skip + limit);
+
     res.status(200).json({
       success: true,
       message: "Leave requests fetched successfully",
-      data: leaveRequests,
+      data: paginated,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
     res.status(500).json({
@@ -86,6 +105,13 @@ const getEmployeeLeaveRequests = async (req, res) => {
       message: error.message,
     });
   }
+};
+
+// get leaveRequest/LeaveRequestsTypes
+const getLeaveRequestsTypes = (req, res) => {
+  res.json({
+    data: ["vacation", "sick", "emergency"],
+  });
 };
 
 // create leaveRequest
@@ -247,6 +273,7 @@ module.exports = {
   getLeaveRequests,
   getLeaveRequestByEmployee,
   getEmployeeLeaveRequests,
+  getLeaveRequestsTypes,
   createLeaveRequest,
   updateLeaveRequestsStatus,
   cancelLeaveRequest,

@@ -13,11 +13,6 @@ const EmployeeSchema = new mongoose.Schema(
     hireDate: { type: Date },
     phone: { type: String },
     address: { type: String },
-    status: {
-      type: String,
-      enum: ["active", "inactive"],
-      default: "active",
-    },
   },
   { timestamps: true },
 );

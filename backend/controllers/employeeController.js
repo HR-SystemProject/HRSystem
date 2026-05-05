@@ -16,7 +16,7 @@ const getEmployees = async (req, res) => {
 
     const employees = await employeeModel
       .find({})
-      .populate("userId", "name email")
+      .populate("userId", "name email isActive")
       .populate({
         path: "departmentId",
         populate: {
@@ -52,13 +52,8 @@ const getEmployeeById = async (req, res) => {
     const employee = await employeeModel
       .findById(req.params.id)
       .populate("userId", "name email")
-      .populate({
-        path: "departmentId",
-        populate: {
-          path: "managerId",
-          select: "name email",
-        },
-      });
+      .populate("departmentId", "name")
+      .populate("managerId", "name email");
 
     if (!employee) {
       return res.status(404).json({
