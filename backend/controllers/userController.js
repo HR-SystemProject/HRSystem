@@ -46,7 +46,7 @@ const createUser = async (req, res) => {
       email,
       password,
       role: userRole._id,
-      profileImage,
+      profileImage: "/image.png",
     });
 
     const result = await newUser.save();
@@ -83,6 +83,13 @@ const login = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "User not found",
+      });
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: "Account is inactive. Contact admin.",
       });
     }
 
@@ -151,7 +158,7 @@ const updateProfile = async (req, res) => {
         message: "Forbidden",
       });
     }
-
+  
     const updatedUser = await userModel
       .findByIdAndUpdate(
         userIdFromParams,
@@ -383,6 +390,56 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Admin: update user information
+const updateUser = async (req, res) => {
+  try {
+    const userRole = req.user.role;
+
+    if (userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    const userId = req.params.id;
+    const { name, email, role, isActive, profileImage } = req.body;
+
+    const updatedUser = await userModel
+      .findByIdAndUpdate(
+        userId,
+        {
+          ...(name && { name }),
+          ...(email && { email }),
+          ...(role && { role }),
+          ...(typeof isActive !== "undefined" && { isActive }),
+          ...(profileImage && { profileImage }),
+        },
+        { new: true },
+      )
+      .populate("role")
+      .select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createUser,
   login,
@@ -393,4 +450,5 @@ module.exports = {
   getUsers,
   getUserById,
   deleteUser,
+  updateUser,
 };

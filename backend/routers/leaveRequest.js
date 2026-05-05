@@ -5,6 +5,7 @@ const {
   getLeaveRequests,
   getLeaveRequestByEmployee,
   getEmployeeLeaveRequests,
+  getLeaveRequestsTypes,
   createLeaveRequest,
   updateLeaveRequestsStatus,
   cancelLeaveRequest,
@@ -25,10 +26,14 @@ leaveRequestRouter.get(
 );
 
 // get leaveRequests/my
+leaveRequestRouter.get("/my", auth, getEmployeeLeaveRequests);
+
+// get leaveRequests/getLeaveRequestsTypes
 leaveRequestRouter.get(
-  "/my",
+  "/LeaveRequestsTypes",
   auth,
-  getEmployeeLeaveRequests,
+  authorize(["hr", "admin"]),
+  getLeaveRequestsTypes,
 );
 
 // create leaveRequest
@@ -38,7 +43,7 @@ leaveRequestRouter.post("/", auth, createLeaveRequest);
 leaveRequestRouter.put(
   "/:id/status",
   auth,
-  authorize(["hr" , "admin"]),
+  authorize(["hr", "admin"]),
   updateLeaveRequestsStatus,
 );
 

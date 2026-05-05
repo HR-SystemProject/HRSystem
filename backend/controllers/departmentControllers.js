@@ -7,8 +7,6 @@ const getDepartments = async (req, res) => {
   try {
     const userRole = req.user.role;
 
-    console.log(userRole);
-
     if (userRole !== "admin" && userRole !== "hr") {
       return res.status(403).json({
         success: false,
@@ -16,19 +14,35 @@ const getDepartments = async (req, res) => {
       });
     }
 
-    const departments = await departmentModel.find({});
+    const departments = await departmentModel
+      .find({})
+      .populate("managerId", "name email");
 
-    if (departments.length === 0) {
+    if (!departments.length) {
       return res.status(404).json({
         success: false,
         message: "No department found",
       });
     }
 
+    const departmentsWithData = await Promise.all(
+      departments.map(async (dep) => {
+        const employees = await employeeModel
+          .find({ departmentId: dep._id })
+          .populate("userId", "name email");
+
+        return {
+          ...dep.toObject(),
+          employeesCount: employees.length,
+          employees, 
+        };
+      }),
+    );
+
     return res.status(200).json({
       success: true,
       message: "All Departments",
-      data: departments,
+      data: departmentsWithData,
     });
   } catch (error) {
     return res.status(500).json({
@@ -51,27 +65,27 @@ const getDepartmentsById = async (req, res) => {
       });
     }
 
-    const departments = await departmentModel
+    const department = await departmentModel
       .findById(departmentId)
       .populate("managerId", "name email");
 
-    if (!departments) {
+    if (!department) {
       return res.status(404).json({
         success: false,
         message: "Department not found",
       });
     }
 
-    const employees = await userModel
+    const employees = await employeeModel
       .find({ departmentId })
-      .select("name email");
+      .populate("userId", "name email");
 
     return res.status(200).json({
       success: true,
       message: "Department found",
       data: {
-        ...departments.toObject(),
-        employees: employees,
+        ...department.toObject(),
+        employees,
       },
     });
   } catch (error) {
