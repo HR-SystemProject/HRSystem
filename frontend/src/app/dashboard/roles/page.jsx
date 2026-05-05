@@ -173,15 +173,17 @@ export default function RolesPage() {
 
   return (
     <div className="container py-5">
-      <div className="d-flex flex-column align-items-start mb-4 gap-2">
-        <h3 className="fw-bold m-0">🛡️ Roles Management</h3>
-        <small className="text-muted">
-          Assign and manage employee roles & system permissions
-        </small>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h3 className="fw-bold m-0">🛡️ Roles Management</h3>
+          <small className="text-muted">
+            Assign and manage employee roles & system permissions
+          </small>
+        </div>
 
         <button
           onClick={openModal}
-          className="btn btn-success d-flex align-items-center gap-2 mt-5"
+          className="btn btn-success d-flex align-items-center gap-2"
         >
           <FaPlus size={14} />
           Add Role

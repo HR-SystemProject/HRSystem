@@ -21,7 +21,7 @@ export default function UsersPage() {
   useEffect(() => {
     fetchUsers();
   }, []);
-  
+
   useEffect(() => {
     setCurrentPage(1);
   }, [search, roleFilter, statusFilter]);
@@ -77,13 +77,16 @@ export default function UsersPage() {
 
   const handleToggleStatus = async (user) => {
     try {
-      await updateUser(user._id, {
+      const updated = await updateUser(user._id, {
         isActive: !user.isActive,
       });
 
+ 
+      const newStatus = updated.data?.data?.isActive;
+
       setUsers((prev) =>
         prev.map((u) =>
-          u._id === user._id ? { ...u, isActive: !u.isActive } : u,
+          u._id === user._id ? { ...u, isActive: newStatus ?? !u.isActive } : u,
         ),
       );
     } catch (err) {

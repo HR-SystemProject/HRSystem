@@ -112,9 +112,12 @@ export default function LeaveRequestsPage() {
   const filteredRequests = leaveRequests.filter((req) => {
     const matchStatus = statusFilter === "all" || req.status === statusFilter;
 
-    const matchSearch = req.employeeId?.name
-      ?.toLowerCase()
-      .includes(search.toLowerCase());
+    const matchSearch =
+      search === "" ||
+      req.employeeId?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      req.employeeId?.email?.toLowerCase().includes(search.toLowerCase()) ||
+      req.leaveType?.toLowerCase().includes(search.toLowerCase()) ||
+      req.reason?.toLowerCase().includes(search.toLowerCase());
 
     return matchStatus && matchSearch;
   });
@@ -126,6 +129,7 @@ export default function LeaveRequestsPage() {
   const fetchLeaveRequests = async (pageNumber = 1, searchValue = "") => {
     try {
       const res = await getLeaveRequests(pageNumber, searchValue);
+
       setLeaveRequests(res.data.data);
       setTotalPages(res.data.totalPages);
     } catch (err) {
@@ -270,9 +274,18 @@ export default function LeaveRequestsPage() {
         </div>
       )}
 
-      <div className="mb-3 d-flex gap-3 align-items-center">
+      <div className="mb-3 d-flex gap-3 align-items-center justify-content-center">
+        <input
+          type="text"
+          placeholder="Search by employee name"
+          className="form-control  w-25"
+          style={{ width: "250px" }}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
         <select
-          className="form-select"
+          className="form-select  w-25"
           style={{ width: "200px" }}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -282,15 +295,6 @@ export default function LeaveRequestsPage() {
           <option value="approved">Approved</option>
           <option value="rejected">Rejected</option>
         </select>
-
-        <input
-          type="text"
-          placeholder="Search by employee name"
-          className="form-control"
-          style={{ width: "250px" }}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
       </div>
 
       <div className="card shadow-sm border-0">
@@ -418,7 +422,8 @@ export default function LeaveRequestsPage() {
               </tbody>
             </table>
           </div>
-          <div className="d-flex justify-content-center mt-4 gap-2">
+          <div className="d-flex justify-content-center gap-2 mt-4 flex-wrap">
+            {/* Prev */}
             <button
               className="btn btn-outline-secondary btn-sm"
               disabled={page === 1}
@@ -427,10 +432,20 @@ export default function LeaveRequestsPage() {
               Prev
             </button>
 
-            <span className="px-3 py-1">
-              Page {page} of {totalPages}
-            </span>
+            {/* Pages */}
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                className={`btn btn-sm ${
+                  page === i + 1 ? "btn-primary" : "btn-outline-primary"
+                }`}
+                onClick={() => setPage(i + 1)}
+              >
+                {i + 1}
+              </button>
+            ))}
 
+            {/* Next */}
             <button
               className="btn btn-outline-secondary btn-sm"
               disabled={page === totalPages}
