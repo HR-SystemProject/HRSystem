@@ -1,18 +1,33 @@
-//  Layout for auth pages
-//  Simple UI (no sidebar/topbar)
 export default function AuthLayout({ children }) {
-  return (
+ return (
     <div
       className="d-flex justify-content-center align-items-center min-vh-100"
       style={{
-        background: "linear-gradient(135deg, #0d6efd, #6ea8fe)",
+        position: "relative",
+        backgroundImage: "url('/background.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
+      {/* OVERLAY */}
       <div
-        className="bg-white p-4 rounded shadow transition-card"
         style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(15, 23, 42, 0.4)",
+        }}
+      />
+
+      {/* CARD */}
+      <div
+        className="shadow-lg"
+        style={{
+          position: "relative",
           width: "100%",
-          maxWidth: "420px",
+          maxWidth: "800px",
+          background: "white",
+          borderRadius: "16px",
+          padding: "30px",
         }}
       >
         {children}
