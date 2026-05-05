@@ -1,15 +1,19 @@
-// Entry point of the app
-// Redirect logic:
-// If user exists → /dashboard
-// If not → /login
-
-
-import Image from "next/image";
+"use client"
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  return (
-    <div>
-      <main></main>
-    </div>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      router.replace("/dashboard/dashboard");
+    } else {
+      router.replace("/auth/login");
+    }
+  }, [router]);
+
+  return null;
 }
