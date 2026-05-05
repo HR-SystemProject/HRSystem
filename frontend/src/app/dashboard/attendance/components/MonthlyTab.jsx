@@ -5,6 +5,9 @@ import { getMonthlyAttendanceReport } from "../../../../services/attendance";
 export default function MonthlyTab() {
   const [report, setReport] = useState([]);
   const [month, setMonth] = useState(new Date().getMonth() + 1);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -62,26 +65,55 @@ export default function MonthlyTab() {
     }
   };
 
-  return (
-    <div className="p-4">
-      {/* HEADER */}
-      <h4 className="fw-bold mb-3">Monthly Attendance Report</h4>
+  const filteredReport = report.filter((item) =>
+    item.employee?.name?.toLowerCase().includes(search.toLowerCase()),
+  );
 
-      {/* Month selector */}
-      <select
-        className="form-select w-25 mb-3"
-        value={month}
-        onChange={(e) => setMonth(Number(e.target.value))}
-      >
-        {months.map((m, index) => (
-          <option key={index} value={index + 1}>
-            {m}
-          </option>
-        ))}
-      </select>
+  const totalPages = Math.ceil(filteredReport.length / itemsPerPage);
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+
+  const paginatedData = filteredReport.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
+
+  return (
+    <div className="container py-4">
+      {/* HEADER */}
+      <h4 className="fw-bold mb-3">📊 Monthly Attendance Report</h4>
 
       <div className="bg-white p-3 shadow-sm rounded mb-3">
-        <h6 className="fw-bold mb-3">Monthly Attendance Rate</h6>
+
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <select
+            className="form-select"
+            style={{ width: "200px" }}
+            value={month}
+            onChange={(e) => {
+              setMonth(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+          >
+            {months.map((m, index) => (
+              <option key={index} value={index + 1}>
+                {m}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            className="form-control"
+            style={{ width: "220px" }}
+            placeholder="Search employee..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1); // مهم
+            }}
+          />
+        </div>
 
         {/* Present */}
         <div className="mb-3">
@@ -140,7 +172,7 @@ export default function MonthlyTab() {
       {error && <p className="text-danger">{error}</p>}
 
       {/* TABLE */}
-      {report.length > 0 && (
+      {paginatedData.length > 0 && (
         <table className="table table-hover bg-white shadow-sm rounded">
           <thead className="table-light">
             <tr>
@@ -167,6 +199,35 @@ export default function MonthlyTab() {
           </tbody>
         </table>
       )}
+      <div className="d-flex justify-content-center mt-4 gap-2">
+        <button
+          className="btn btn-outline-secondary btn-sm"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(currentPage - 1)}
+        >
+          Prev
+        </button>
+
+        {Array.from({ length: totalPages }, (_, i) => (
+          <button
+            key={i}
+            className={`btn btn-sm ${
+              currentPage === i + 1 ? "btn-primary" : "btn-outline-primary"
+            }`}
+            onClick={() => setCurrentPage(i + 1)}
+          >
+            {i + 1}
+          </button>
+        ))}
+
+        <button
+          className="btn btn-outline-secondary btn-sm"
+          disabled={currentPage === totalPages || totalPages === 0}
+          onClick={() => setCurrentPage(currentPage + 1)}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }

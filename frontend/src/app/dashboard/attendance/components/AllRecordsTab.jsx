@@ -5,59 +5,37 @@ import { getUsers } from "../../../../services/users";
 
 export default function AllRecordsTab() {
   const [attendance, setAttendance] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-
   const [employees, setEmployees] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const [sortConfig, setSortConfig] = useState({
+    key: "date",
+    direction: "desc",
+  });
 
   useEffect(() => {
     fetchAttendance();
     fetchEmployees();
   }, []);
 
-  useEffect(() => {
-    let data = [...attendance];
-
-    // FILTER BY DATE
-    if (selectedDate) {
-      data = data.filter((item) => {
-        const itemDate = new Date(item.date).toISOString().split("T")[0];
-        return itemDate === selectedDate;
-      });
-    }
-
-    // FILTER BY STATUS
-    if (selectedStatus) {
-      data = data.filter((item) => item.status === selectedStatus);
-    }
-
-    // FILTER BY EMPLOYEE
-    if (selectedEmployee) {
-      data = data.filter(
-        (item) => item.employeeId?._id === selectedEmployee
-      );
-    }
-
-    setFiltered(data);
-  }, [selectedDate, selectedStatus, selectedEmployee, attendance]);
-
   const fetchAttendance = async () => {
     try {
       setLoading(true);
-
       const res = await getAllAttendance();
       setAttendance(res.data.data);
-      setFiltered(res.data.data);
-
-      setLoading(false);
     } catch (err) {
       setError(err.response?.data?.message || "Error loading data");
+    } finally {
       setLoading(false);
     }
   };
@@ -67,9 +45,73 @@ export default function AllRecordsTab() {
       const res = await getUsers();
       setEmployees(res.data.data);
     } catch (err) {
-      console.log("Error loading employees", err);
+      console.log(err);
     }
   };
+
+  // ---------------- SORT ----------------
+  const handleSort = (key) => {
+    let direction = "asc";
+
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+
+    setSortConfig({ key, direction });
+  };
+
+  const getValue = (item, key) => {
+    switch (key) {
+      case "name":
+        return item.employeeId?.name || "";
+      case "date":
+        return new Date(item.date);
+      case "status":
+        return item.status;
+      case "workingTime":
+        return item.workingTime || "";
+      default:
+        return "";
+    }
+  };
+
+  // ---------------- FILTER + SEARCH + SORT ----------------
+  const processedData = attendance
+    .filter((item) =>
+      item.employeeId?.name?.toLowerCase().includes(search.toLowerCase())
+    )
+    .filter((item) => {
+      if (selectedDate) {
+        const d = new Date(item.date).toISOString().split("T")[0];
+        if (d !== selectedDate) return false;
+      }
+
+      if (selectedStatus && item.status !== selectedStatus) return false;
+
+      if (
+        selectedEmployee &&
+        item.employeeId?._id !== selectedEmployee
+      )
+        return false;
+
+      return true;
+    })
+    .sort((a, b) => {
+      const aVal = getValue(a, sortConfig.key);
+      const bVal = getValue(b, sortConfig.key);
+
+      if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+
+  // ---------------- PAGINATION ----------------
+  const totalPages = Math.ceil(processedData.length / itemsPerPage);
+
+  const paginatedData = processedData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -79,10 +121,8 @@ export default function AllRecordsTab() {
         return "warning";
       case "absent":
         return "danger";
-      case "forgot_checkout":
-        return "secondary";
       default:
-        return "dark";
+        return "secondary";
     }
   };
 
@@ -90,30 +130,41 @@ export default function AllRecordsTab() {
   if (error) return <p className="text-danger">{error}</p>;
 
   return (
-    <div className="p-4">
+    <div className="container py-1">
 
       {/* HEADER */}
       <div className="mb-3">
         <h4 className="fw-bold">📋 All Attendance Records</h4>
         <small className="text-muted">
-          Total: {filtered.length}
+          Total: {processedData.length}
         </small>
       </div>
 
       {/* FILTERS */}
-      <div className="mb-4 d-flex gap-3 flex-wrap">
+      <div className="mb-3 d-flex gap-3 flex-wrap align-items-center justify-content-center">
 
-        {/* DATE */}
+        <input
+          className="form-control"
+          style={{ width: "200px" }}
+          placeholder="Search employee..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
+        />
+
         <input
           type="date"
-          className="form-control w-auto"
+          className="form-control"
+          style={{ width: "180px" }}
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
         />
 
-        {/* STATUS */}
         <select
-          className="form-select w-auto"
+          className="form-select"
+          style={{ width: "180px" }}
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value)}
         >
@@ -123,9 +174,9 @@ export default function AllRecordsTab() {
           <option value="absent">Absent</option>
         </select>
 
-        {/* EMPLOYEE DROPDOWN */}
         <select
-          className="form-select w-auto"
+          className="form-select"
+          style={{ width: "200px" }}
           value={selectedEmployee}
           onChange={(e) => setSelectedEmployee(e.target.value)}
         >
@@ -137,65 +188,122 @@ export default function AllRecordsTab() {
           ))}
         </select>
 
-        {/* RESET */}
         <button
           className="btn btn-secondary btn-sm"
           onClick={() => {
+            setSearch("");
             setSelectedDate("");
             setSelectedStatus("");
             setSelectedEmployee("");
+            setCurrentPage(1);
           }}
         >
           Reset
         </button>
       </div>
 
-      {/* CARDS */}
-      <div className="row g-3">
-        {filtered.map((item, index) => (
-          <div className="col-md-4" key={index}>
-            <div className="p-3 bg-white shadow-sm rounded h-100">
+      {/* TABLE */}
+      <div className="table-responsive bg-white shadow-sm rounded">
+        <table className="table table-hover align-middle mb-0">
+          <thead className="table-light">
+            <tr>
+              <th onClick={() => handleSort("name")} style={{ cursor: "pointer" }}>
+                Employee
+              </th>
 
-              <h6 className="fw-bold mb-1">
-                👤 {item.employeeId?.name || "Unknown"}
-              </h6>
+              <th onClick={() => handleSort("date")} style={{ cursor: "pointer" }}>
+                Date
+              </th>
 
-              <small className="text-muted d-block mb-2">
-                {item.employeeId?.email}
-              </small>
+              <th onClick={() => handleSort("status")} style={{ cursor: "pointer" }}>
+                Status
+              </th>
 
-              <hr />
+              <th>Check In</th>
+              <th>Check Out</th>
 
-              <p>📅 {new Date(item.date).toLocaleDateString()}</p>
+              <th onClick={() => handleSort("workingTime")} style={{ cursor: "pointer" }}>
+                Working Time
+              </th>
+            </tr>
+          </thead>
 
-              <p>
-                🟢 Status:{" "}
-                <span className={`text-${getStatusColor(item.status)} fw-bold`}>
-                  {item.status}
-                </span>
-              </p>
+          <tbody>
+            {paginatedData.length > 0 ? (
+              paginatedData.map((item) => (
+                <tr key={item._id}>
+                  <td>
+                    <div className="fw-semibold">
+                      {item.employeeId?.name}
+                    </div>
+                    <small className="text-muted">
+                      {item.employeeId?.email}
+                    </small>
+                  </td>
 
-              <p>
-                ⏰ In:{" "}
-                {item.checkIn
-                  ? new Date(item.checkIn).toLocaleTimeString()
-                  : "-"}
-              </p>
+                  <td>{new Date(item.date).toLocaleDateString()}</td>
 
-              <p>
-                ⏰ Out:{" "}
-                {item.checkOut
-                  ? new Date(item.checkOut).toLocaleTimeString()
-                  : "Still working"}
-              </p>
+                  <td>
+                    <span className={`badge bg-${getStatusColor(item.status)}`}>
+                      {item.status}
+                    </span>
+                  </td>
 
-              <p className="fw-semibold">
-                ⏱ {item.workingTime}
-              </p>
+                  <td>
+                    {item.checkIn
+                      ? new Date(item.checkIn).toLocaleTimeString()
+                      : "-"}
+                  </td>
 
-            </div>
-          </div>
+                  <td>
+                    {item.checkOut
+                      ? new Date(item.checkOut).toLocaleTimeString()
+                      : "-"}
+                  </td>
+
+                  <td className="fw-semibold">{item.workingTime}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center py-4 text-muted">
+                  No records found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* PAGINATION */}
+      <div className="d-flex justify-content-center mt-3 gap-2">
+        <button
+          className="btn btn-outline-secondary btn-sm"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(currentPage - 1)}
+        >
+          Prev
+        </button>
+
+        {Array.from({ length: totalPages }, (_, i) => (
+          <button
+            key={i}
+            className={`btn btn-sm ${
+              currentPage === i + 1 ? "btn-primary" : "btn-outline-primary"
+            }`}
+            onClick={() => setCurrentPage(i + 1)}
+          >
+            {i + 1}
+          </button>
         ))}
+
+        <button
+          className="btn btn-outline-secondary btn-sm"
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(currentPage + 1)}
+        >
+          Next
+        </button>
       </div>
     </div>
   );
