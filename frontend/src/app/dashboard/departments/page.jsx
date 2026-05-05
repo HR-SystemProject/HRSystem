@@ -9,8 +9,23 @@ import {
 } from "../../../services/departments";
 import { getUsers } from "../../../services/users";
 import { FaEdit, FaTrash, FaEye, FaPlus } from "react-icons/fa";
+import {
+  BarChart,
+  Cell,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 export default function DepartmentsPage() {
   const [errors, setErrors] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const [search, setSearch] = useState("");
+  const [managerFilter, setManagerFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
+
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -148,37 +163,200 @@ export default function DepartmentsPage() {
     return newErrors;
   };
 
-   const openDelete = (id) => {
-      setDeleteDepartmentId(id);
-    };
-  
-    const closeDelete = () => {
+  const openDelete = (id) => {
+    setDeleteDepartmentId(id);
+  };
+
+  const closeDelete = () => {
+    setDeleteDepartmentId(null);
+  };
+
+  const handleDeleteDepartment = async () => {
+    try {
+      const res = await deleteDepartment(deleteDepartmentId);
+
       setDeleteDepartmentId(null);
-    };
-  
-    const handleDeleteDepartment = async () => {
-      try {
-        const res = await deleteDepartment(deleteDepartmentId);
-  
-        setDeleteDepartmentId(null);
-        fetchDepartments();
-      } catch (err) {
-        console.log(err);
-      }
-    };
+      fetchDepartments();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const filteredDepartments = departments.filter((dep) => {
+    const matchDepartment =
+      departmentFilter === "" || dep.name === departmentFilter;
+
+    const matchManager =
+      managerFilter === "" || dep.managerId?._id === managerFilter;
+
+    return matchDepartment && matchManager;
+  });
+
+  const totalDepartments = departments.length;
+
+  const totalEmployees = departments.reduce(
+    (sum, dep) => sum + (dep.employeesCount || 0),
+    0,
+  );
+
+  const chartData = departments.map((dep) => ({
+    name: dep.name,
+    employees: dep.employeesCount || 0,
+  }));
+
+  const COLORS = [
+    "#a2a5fa",
+    "#c9fdec",
+    "#ffeed1",
+    "#ffb6b6",
+    "#aca7b6",
+    "#fef49f",
+    "#c5fe9f",
+    "#e780f0",
+    "#fe9f9f",
+    "#9ff9fe",
+  ];
+
+  const totalPages = Math.ceil(filteredDepartments.length / itemsPerPage);
+  const paginatedDepartments = filteredDepartments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, managerFilter, departmentFilter]);
 
   return (
     <div className="container py-5">
-      <div className="d-flex flex-column align-items-start mb-4 gap-2">
-        <h3 className="fw-bold m-0">Departments Management</h3>
+      {/* HEADER */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h3 className="fw-bold">🏢 Management Department</h3>
+          <small className="text-muted">
+            Create and manage company departments
+          </small>
+        </div>
 
         <button
           onClick={openModal}
           className="btn btn-success d-flex align-items-center gap-2"
         >
           <FaPlus size={14} />
-          Add Department
+          Create New Department
         </button>
+      </div>
+
+      {/* SEARCH */}
+      <div className="d-flex gap-2 mb-3 justify-content-center">
+        <input
+          className="form-control w-25"
+          placeholder="Search department..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        <select
+          className="form-select w-25"
+          value={departmentFilter}
+          onChange={(e) => setDepartmentFilter(e.target.value)}
+        >
+          <option value="">All Departments</option>
+
+          {departments.map((dep) => (
+            <option key={dep._id} value={dep.name}>
+              {dep.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Manager filter */}
+        <select
+          className="form-select w-25"
+          value={managerFilter}
+          onChange={(e) => setManagerFilter(e.target.value)}
+        >
+          <option value="">All Managers</option>
+
+          {managers.map((m) => (
+            <option key={m._id} value={m._id}>
+              {m.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* CHART */}
+      <div className="card p-3 shadow-sm mb-4" style={{ borderRadius: "14px" }}>
+        <h6 className="mb-3">Employees per Department</h6>
+
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData}>
+            <XAxis dataKey="name" />
+            <YAxis allowDecimals={false} domain={[0, "dataMax + 2"]} />
+            <Tooltip />
+
+            <Bar dataKey="employees" radius={[6, 6, 0, 0]}>
+              {chartData.map((entry, index) => (
+                <Cell key={index} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* TABLE */}
+      <div className="card shadow-sm border-0">
+        <div className="table-responsive">
+          <table className="table align-middle mb-0">
+            <thead className="table-light">
+              <tr>
+                <th>Department</th>
+                <th>Manager</th>
+                <th>Employees</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {paginatedDepartments.map((dep) => (
+                <tr key={dep._id}>
+                  <td className="fw-semibold">{dep.name}</td>
+
+                  <td>{dep.managerId?.name || "—"}</td>
+
+                  <td>{dep.employeesCount || 0}</td>
+
+                  <td>{new Date(dep.createdAt).toLocaleDateString()}</td>
+
+                  <td className="d-flex gap-2">
+                    <button
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => handleViewDepartment(dep._id)}
+                    >
+                      <FaEye />
+                    </button>
+
+                    <button
+                      className="btn btn-sm btn-outline-warning"
+                      onClick={() => handleEditDepartment(dep)}
+                    >
+                      <FaEdit />
+                    </button>
+
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => openDelete(dep._id)}
+                    >
+                      <FaTrash />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* View department */}
@@ -219,11 +397,15 @@ export default function DepartmentsPage() {
             {/* Employees */}
             <div className="mb-2">
               <strong>Employees:</strong>
-              <p className="mb-1 text-muted">
-                {selectedDepartment.employees?.length > 0
-                  ? selectedDepartment.employees.length
-                  : "No employees"}
-              </p>
+              <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+                {selectedDepartment?.employees?.length > 0 ? (
+                  selectedDepartment.employees.map((emp) => (
+                    <div key={emp._id}>{emp.userId?.name}</div>
+                  ))
+                ) : (
+                  <p className="text-muted">No employees</p>
+                )}
+              </div>
             </div>
 
             {/* Dates */}
@@ -417,45 +599,34 @@ export default function DepartmentsPage() {
           </div>
         </div>
       )}
+      <div className="d-flex justify-content-center gap-2 mt-3">
+        <button
+          className="btn btn-outline-secondary btn-sm"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(currentPage - 1)}
+        >
+          Prev
+        </button>
 
-      <div className="row g-3">
-        {departments.map((dep) => (
-          <div key={dep._id} className="col-md-6">
-            <div className="card shadow-sm border-0 h-100 d-flex flex-column">
-              <div className="card-body d-flex flex-column">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <h5 className="mb-0 fw-semibold">{dep.name}</h5>
-                </div>
-                <small className="my-3 fw-semibold text-muted">
-                  {dep.description}
-                </small>
-
-                <div className="d-flex gap-2 mt-auto">
-                  <button
-                    onClick={() => handleViewDepartment(dep._id)}
-                    className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 px-3"
-                  >
-                    <FaEye size={13} /> View
-                  </button>
-
-                  <button
-                    onClick={() => handleEditDepartment(dep)}
-                    className="btn btn-sm btn-outline-warning d-flex align-items-center gap-1 px-3"
-                  >
-                    <FaEdit size={13} /> Edit
-                  </button>
-
-                  <button
-                    onClick={() => openDelete(dep._id)}
-                    className="btn btn-sm btn-outline-danger"
-                  >
-                    <FaTrash size={13} /> Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+        {Array.from({ length: totalPages }, (_, i) => (
+          <button
+            key={i}
+            className={`btn btn-sm ${
+              currentPage === i + 1 ? "btn-primary" : "btn-outline-primary"
+            }`}
+            onClick={() => setCurrentPage(i + 1)}
+          >
+            {i + 1}
+          </button>
         ))}
+
+        <button
+          className="btn btn-outline-secondary btn-sm"
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(currentPage + 1)}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

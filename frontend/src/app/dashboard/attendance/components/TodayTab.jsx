@@ -4,8 +4,11 @@ import { getTodayAttendance } from "../../../../services/attendance";
 
 export default function AttendancePage() {
   const [attendance, setAttendance] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
 
   const date = new Date();
 
@@ -38,19 +41,38 @@ export default function AttendancePage() {
     (a) => a.status === "absent",
   ).length;
 
-  if (loading) return <p>Loading...</p>;
+  const filteredAttendance = attendance.filter((item) =>
+    item.userId?.name?.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredAttendance.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
+
+  const totalPages = Math.ceil(filteredAttendance.length / itemsPerPage);
+
+  if (loading)
+    return (
+      <div className=" py-5 text-center">
+        <div className="spinner-border text-primary" />
+        <p className="mt-2">Loading attendance...</p>
+      </div>
+    );
 
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div className="p-4">
+    <div className="container py-1">
       {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center mb-3 p-3 bg-white shadow-sm rounded">
+        {/* LEFT */}
         <div className="d-flex align-items-center gap-2">
           <h5 className="fw-bold mb-0">🗓️ Today’s Attendance</h5>
 
           <small
-            className="text-muted rounded p-2"
+            className="text-muted rounded px-2 py-1"
             style={{ background: "#e8e8e8" }}
           >
             {new Intl.DateTimeFormat("en-US", {
@@ -60,6 +82,16 @@ export default function AttendancePage() {
             }).format(new Date())}
           </small>
         </div>
+
+        {/* RIGHT (Search) */}
+        <input
+          type="text"
+          className="form-control w-25"
+          style={{ width: "220px" }}
+          placeholder="Search employee..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       <div className="row g-3 mb-4">
@@ -125,8 +157,11 @@ export default function AttendancePage() {
       </div>
 
       {/* TABLE SECTION */}
-      {attendance.length === 0 ? (
-        <p className="text-gray-500">No records today</p>
+      {filteredAttendance.length === 0 ? (
+        <div className="text-center text-muted py-5">
+          <h5>No attendance records for today</h5>
+          <small>Employees haven’t checked in yet</small>
+        </div>
       ) : (
         <table className="table table-hover table-striped w-100 bg-white shadow-sm rounded overflow-hidden">
           <thead className="table-light">
@@ -140,7 +175,7 @@ export default function AttendancePage() {
           </thead>
 
           <tbody>
-            {attendance.map((item, index) => (
+            {paginatedData.map((item, index) => (
               <tr key={index} className="align-middle">
                 <td className="p-3">{item.userId?.name}</td>
 
@@ -170,12 +205,12 @@ export default function AttendancePage() {
 
                 <td className="p-3">
                   <span
-                    className={`fw-semibold ${
-                      item.status === "absent"
-                        ? "text-danger"
+                    className={`badge ${
+                      item.status === "present"
+                        ? "bg-success"
                         : item.status === "late"
-                          ? "text-warning"
-                          : "text-dark"
+                          ? "bg-warning text-dark"
+                          : "bg-danger"
                     }`}
                   >
                     {item.status}
@@ -188,6 +223,35 @@ export default function AttendancePage() {
           </tbody>
         </table>
       )}
+      <div className="d-flex justify-content-center mt-4 gap-2">
+        <button
+          className="btn btn-outline-secondary btn-sm"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(currentPage - 1)}
+        >
+          Prev
+        </button>
+
+        {Array.from({ length: totalPages }, (_, i) => (
+          <button
+            key={i}
+            className={`btn btn-sm ${
+              currentPage === i + 1 ? "btn-primary" : "btn-outline-primary"
+            }`}
+            onClick={() => setCurrentPage(i + 1)}
+          >
+            {i + 1}
+          </button>
+        ))}
+
+        <button
+          className="btn btn-outline-secondary btn-sm"
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(currentPage + 1)}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }
