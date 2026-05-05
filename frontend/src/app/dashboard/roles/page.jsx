@@ -11,8 +11,10 @@ import { FaEdit, FaTrash, FaEye, FaPlus } from "react-icons/fa";
 
 export default function RolesPage() {
   const [errors, setErrors] = useState({});
+  const [search, setSearch] = useState("");
   const [roles, setRoles] = useState([]);
   const [selectedRole, setSelectedRole] = useState(null);
+  const [roleFilter, setRoleFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     roleName: "",
@@ -154,18 +156,56 @@ export default function RolesPage() {
     }
   };
 
+  const filteredRoles = (roles || []).filter((role) => {
+    const searchText = search.toLowerCase();
+
+    const matchSearch =
+      role.roleName?.toLowerCase().includes(searchText) ||
+      (role.permissions || []).some((p) =>
+        p.toLowerCase().includes(searchText),
+      );
+
+    const matchRole =
+      roleFilter === "all" ? true : role.roleName?.toLowerCase() === roleFilter;
+
+    return matchSearch && matchRole;
+  });
+
   return (
     <div className="container py-5">
       <div className="d-flex flex-column align-items-start mb-4 gap-2">
-        <h3 className="fw-bold m-0">Roles Management</h3>
+        <h3 className="fw-bold m-0">🛡️ Roles Management</h3>
+        <small className="text-muted">
+          Assign and manage employee roles & system permissions
+        </small>
 
         <button
           onClick={openModal}
-          className="btn btn-success d-flex align-items-center gap-2"
+          className="btn btn-success d-flex align-items-center gap-2 mt-5"
         >
           <FaPlus size={14} />
           Add Role
         </button>
+      </div>
+
+      <div className="d-flex gap-2 mb-3 justify-content-center">
+        <input
+          className="form-control w-25"
+          placeholder="Search by role name..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        <select
+          className="form-select w-25"
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+        >
+          <option value="all">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="hr">HR</option>
+          <option value="user">User</option>
+        </select>
       </div>
 
       {/* View role */}
@@ -355,7 +395,7 @@ export default function RolesPage() {
       )}
 
       <div className="row g-3">
-        {roles.map((role) => (
+        {filteredRoles.map((role) => (
           <div key={role._id} className="col-md-6">
             <div className="card shadow-sm border-0 h-100 d-flex flex-column">
               <div className="card-body d-flex flex-column">
