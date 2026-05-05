@@ -23,7 +23,7 @@ export const logout = () => {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-    }
+    },
   );
 };
 
@@ -73,6 +73,15 @@ export const changePassword = (data) => {
 // UPDATE PROFILE
 export const updateProfile = (id, data) => {
   return axios.put(`${API}/${id}/profile`, data, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+};
+
+// put status
+export const updateUser = (id, data) => {
+  return axios.put(`${API}/${id}`, data, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
