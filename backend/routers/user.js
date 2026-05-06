@@ -38,15 +38,15 @@ userRouter.post("/forget-password", forgetPassword);
 // ADMIN ROUTES
 
 // Get users
-userRouter.get("/", auth, authorize("admin"), getUsers);
+userRouter.get("/", auth, authorize(["admin", "hr"]), getUsers);
 
 // Get users/:id
-userRouter.get("/:id", auth, authorize("admin"), getUserById);
+userRouter.get("/:id", auth, authorize(["admin", "hr"]), getUserById);
 
 // Delete users/:id
-userRouter.delete("/:id", auth, authorize("admin"), deleteUser);
+userRouter.delete("/:id", auth, authorize(["admin", "hr"]), deleteUser);
 
 // Admin: update user information
-userRouter.put("/:id", auth, authorize("admin"), updateUser);
+userRouter.put("/:id", auth, authorize(["admin", "hr"]), updateUser);
 
 module.exports = userRouter;
