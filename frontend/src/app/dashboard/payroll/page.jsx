@@ -9,7 +9,13 @@ import {
 } from "../../../services/payroll";
 import { getEmployees } from "../../../services/employees";
 import { getRole } from "../../../utils/auth";
-import { FaEdit, FaTrash, FaEye, FaPlus, FaMoneyBillWave } from "react-icons/fa";
+import {
+  FaEdit,
+  FaTrash,
+  FaEye,
+  FaPlus,
+  FaMoneyBillWave,
+} from "react-icons/fa";
 
 export default function Page() {
   const [errors, setErrors] = useState({});
@@ -54,9 +60,7 @@ export default function Page() {
 
   const fetchPayrolls = async () => {
     try {
-      const res = isAdminOrHR
-        ? await getPayrolls()
-        : await getMyPayroll();
+      const res = isAdminOrHR ? await getPayrolls() : await getMyPayroll();
       setPayrolls(res.data.data);
     } catch (err) {
       console.log(err);
@@ -93,7 +97,10 @@ export default function Page() {
     let newErrors = {};
     if (!editPayroll.baseSalary)
       newErrors.baseSalary = "Base salary is required";
-    else if (isNaN(editPayroll.baseSalary) || Number(editPayroll.baseSalary) < 0)
+    else if (
+      isNaN(editPayroll.baseSalary) ||
+      Number(editPayroll.baseSalary) < 0
+    )
       newErrors.baseSalary = "Base salary must be a positive number";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -163,7 +170,6 @@ export default function Page() {
 
   const handleDeletePayroll = async () => {
     try {
-     
       setDeletePayrollId(null);
       await fetchPayrolls();
     } catch (err) {
@@ -241,7 +247,9 @@ export default function Page() {
               <strong>Status:</strong>{" "}
               <span
                 className={`badge ${
-                  selectedPayroll.status === "paid" ? "bg-success" : "bg-warning text-dark"
+                  selectedPayroll.status === "paid"
+                    ? "bg-success"
+                    : "bg-warning text-dark"
                 }`}
               >
                 {selectedPayroll.status}
@@ -296,7 +304,9 @@ export default function Page() {
               ))}
             </select>
             {errors.employeeId && (
-              <small className="text-danger d-block mb-2">{errors.employeeId}</small>
+              <small className="text-danger d-block mb-2">
+                {errors.employeeId}
+              </small>
             )}
 
             <input
@@ -319,7 +329,9 @@ export default function Page() {
               value={formData.baseSalary}
             />
             {errors.baseSalary && (
-              <small className="text-danger d-block mb-2">{errors.baseSalary}</small>
+              <small className="text-danger d-block mb-2">
+                {errors.baseSalary}
+              </small>
             )}
 
             <input
@@ -376,7 +388,10 @@ export default function Page() {
           >
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h5 className="fw-bold mb-0">Edit Payroll</h5>
-              <button className="btn-close" onClick={() => setEditPayroll(null)} />
+              <button
+                className="btn-close"
+                onClick={() => setEditPayroll(null)}
+              />
             </div>
 
             <input
@@ -388,7 +403,9 @@ export default function Page() {
               placeholder="Base Salary"
             />
             {errors.baseSalary && (
-              <small className="text-danger d-block mb-2">{errors.baseSalary}</small>
+              <small className="text-danger d-block mb-2">
+                {errors.baseSalary}
+              </small>
             )}
 
             <input
@@ -482,7 +499,9 @@ export default function Page() {
                 <td>${payroll.baseSalary}</td>
                 <td>${payroll.bonus}</td>
                 <td>${payroll.deductions}</td>
-                <td className="fw-semibold text-success">${payroll.netSalary}</td>
+                <td className="fw-semibold text-success">
+                  ${payroll.netSalary}
+                </td>
                 <td>
                   <span
                     className={`badge ${
@@ -521,7 +540,9 @@ export default function Page() {
                           }`}
                         >
                           <FaMoneyBillWave size={13} />
-                          {payroll.status === "pending" ? "Mark Paid" : "Mark Pending"}
+                          {payroll.status === "pending"
+                            ? "Mark Paid"
+                            : "Mark Pending"}
                         </button>
 
                         <button

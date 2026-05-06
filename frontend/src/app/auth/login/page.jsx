@@ -27,7 +27,6 @@ export default function Login() {
   const handleSubmit = async () => {
     let newErrors = {};
 
-    // validation
     if (!form.email) newErrors.email = "Email is required";
     if (!form.password) newErrors.password = "Password is required";
 
@@ -40,19 +39,27 @@ export default function Login() {
       setLoading(true);
       setErrors({});
 
+      console.log("BEFORE LOGIN");
+
       const res = await login(form);
+
+      console.log(res.data);
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      router.push("/dashboard/dashboard");
-    } catch (err) {
-      console.log(err);
+      const role = res.data.user.role;
 
-      const message = err?.response?.data?.message;
+      if (role === "user") {
+        router.push("/dashboard/userDashboard");
+      } else {
+        router.push("/dashboard/dashboard");
+      }
+    } catch (error) {
+      console.log(error);
 
       setErrors({
-        general: "Email or password invalid",
+        general: error?.response?.data?.message || "Login failed",
       });
     } finally {
       setLoading(false);

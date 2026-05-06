@@ -18,18 +18,18 @@ const auth = require("../middleware/Authentication");
 attendanceRouter.get(
   "/today",
   auth,
-  authorize("hr, admin"),
+  authorize(["hr", "admin"]),
   getTodayAttendance,
 );
 
 // get Attendance
-attendanceRouter.get("/", auth, authorize("hr , admin"), getAttendance);
+attendanceRouter.get("/", auth, authorize(["hr" , "admin"]), getAttendance);
 
 // get attendance/employee/:id
 attendanceRouter.get(
   "/employee/:id",
   auth,
-  authorize("admin, hr"),
+  authorize(["admin", "hr"]),
   getEmployeeAttendance,
 );
 
@@ -40,7 +40,7 @@ attendanceRouter.get("/month/:month", auth, getMonthlyAttendance);
 attendanceRouter.get(
   "/monthlyReport/:month",
   auth,
-  authorize("hr , admin"),
+  authorize(["hr" , "admin"]),
   getMonthlyAttendanceReport,
 );
 

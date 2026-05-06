@@ -78,7 +78,7 @@ export default function AllRecordsTab() {
   // ---------------- FILTER + SEARCH + SORT ----------------
   const processedData = attendance
     .filter((item) =>
-      item.employeeId?.name?.toLowerCase().includes(search.toLowerCase())
+      item.employeeId?.name?.toLowerCase().includes(search.toLowerCase()),
     )
     .filter((item) => {
       if (selectedDate) {
@@ -88,10 +88,7 @@ export default function AllRecordsTab() {
 
       if (selectedStatus && item.status !== selectedStatus) return false;
 
-      if (
-        selectedEmployee &&
-        item.employeeId?._id !== selectedEmployee
-      )
+      if (selectedEmployee && item.employeeId?._id !== selectedEmployee)
         return false;
 
       return true;
@@ -110,7 +107,7 @@ export default function AllRecordsTab() {
 
   const paginatedData = processedData.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const getStatusColor = (status) => {
@@ -131,18 +128,14 @@ export default function AllRecordsTab() {
 
   return (
     <div className="container py-1">
-
       {/* HEADER */}
       <div className="mb-3">
         <h4 className="fw-bold">📋 All Attendance Records</h4>
-        <small className="text-muted">
-          Total: {processedData.length}
-        </small>
+        <small className="text-muted">Total: {processedData.length}</small>
       </div>
 
       {/* FILTERS */}
       <div className="mb-3 d-flex gap-3 flex-wrap align-items-center justify-content-center">
-
         <input
           className="form-control"
           style={{ width: "200px" }}
@@ -207,22 +200,34 @@ export default function AllRecordsTab() {
         <table className="table table-hover align-middle mb-0">
           <thead className="table-light">
             <tr>
-              <th onClick={() => handleSort("name")} style={{ cursor: "pointer" }}>
+              <th
+                onClick={() => handleSort("name")}
+                style={{ cursor: "pointer" }}
+              >
                 Employee
               </th>
 
-              <th onClick={() => handleSort("date")} style={{ cursor: "pointer" }}>
+              <th
+                onClick={() => handleSort("date")}
+                style={{ cursor: "pointer" }}
+              >
                 Date
               </th>
 
-              <th onClick={() => handleSort("status")} style={{ cursor: "pointer" }}>
+              <th
+                onClick={() => handleSort("status")}
+                style={{ cursor: "pointer" }}
+              >
                 Status
               </th>
 
               <th>Check In</th>
               <th>Check Out</th>
 
-              <th onClick={() => handleSort("workingTime")} style={{ cursor: "pointer" }}>
+              <th
+                onClick={() => handleSort("workingTime")}
+                style={{ cursor: "pointer" }}
+              >
                 Working Time
               </th>
             </tr>
@@ -231,11 +236,9 @@ export default function AllRecordsTab() {
           <tbody>
             {paginatedData.length > 0 ? (
               paginatedData.map((item) => (
-                <tr key={item._id}>
+                <tr key={item._id ?? item.date + item.employeeId?._id}>
                   <td>
-                    <div className="fw-semibold">
-                      {item.employeeId?.name}
-                    </div>
+                    <div className="fw-semibold">{item.employeeId?.name}</div>
                     <small className="text-muted">
                       {item.employeeId?.email}
                     </small>
