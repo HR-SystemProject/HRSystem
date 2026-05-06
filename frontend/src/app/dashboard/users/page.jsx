@@ -24,10 +24,13 @@ export default function UsersPage() {
   useEffect(() => {
     const role = getRole();
 
-    if (role !== "admin") {
+    console.log("ROLE FROM TOKEN:", role);
+
+    if (!role || role.roleName?.toLowerCase() !== "admin") {
       router.push("/unauthorized");
       return;
     }
+
     fetchUsers();
   }, []);
 

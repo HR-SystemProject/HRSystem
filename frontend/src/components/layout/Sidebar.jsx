@@ -24,10 +24,11 @@ export default function Sidebar({ role }) {
     ],
 
     user: [
-      { name: "My Profile", path: "/dashboard/users" },
-      { name: "My Attendance", path: "/dashboard/attendance" },
-      { name: "My Leave Requests", path: "/dashboard/leaveRequests" },
-      { name: "My Payroll", path: "/dashboard/payroll" },
+      { name: "Dashboard", path: "/dashboard/userDashboard" },
+      { name: "My Profile", path: "/dashboard/myProfile" },
+      { name: "My Attendance", path: "/dashboard/myAttendance" },
+      { name: "My Leave Requests", path: "/dashboard/myLeaveRequests" },
+      { name: "My Payroll", path: "/dashboard/myPayroll" },
     ],
   };
   const items = menu[role] || [];

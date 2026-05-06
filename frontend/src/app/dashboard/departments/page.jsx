@@ -19,7 +19,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import {useRouter } from "next/navigation";
 export default function DepartmentsPage() {
+  const router = useRouter();
   const role = getRole();
 
   const [errors, setErrors] = useState({});
@@ -49,6 +51,9 @@ export default function DepartmentsPage() {
   };
 
   useEffect(() => {
+    if (!role || !["admin", "hr"].includes(role.roleName)) {
+      router.push("/unauthorized");
+    }
     fetchDepartments();
   }, []);
 

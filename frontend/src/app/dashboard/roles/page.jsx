@@ -7,9 +7,13 @@ import {
   updateRole,
   deleteRole,
 } from "../../../services/role";
+import { getRole } from "../../../utils/auth";
+import { useRouter } from "next/navigation";
+
 import { FaEdit, FaTrash, FaEye, FaPlus } from "react-icons/fa";
 
 export default function RolesPage() {
+  const router = useRouter();
   const [errors, setErrors] = useState({});
   const [search, setSearch] = useState("");
   const [roles, setRoles] = useState([]);
@@ -30,6 +34,15 @@ export default function RolesPage() {
   };
 
   useEffect(() => {
+    const role = getRole();
+
+    const roleName =
+      typeof role === "string" ? role : role?.roleName || role?.role;
+
+    if (roleName?.toLowerCase() !== "admin") {
+      router.push("/unauthorized");
+      return;
+    }
     fetchRoles();
   }, []);
 

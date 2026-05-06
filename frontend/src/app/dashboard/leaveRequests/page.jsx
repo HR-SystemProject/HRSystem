@@ -7,8 +7,11 @@ import {
   updateLeaveRequestsStatus,
 } from "../../../services/leaveRequests";
 import { FaEye, FaCheck, FaTimes, FaPlus } from "react-icons/fa";
+import { getRole } from "../../../utils/auth";
+import { useRouter } from "next/navigation";
 
 export default function LeaveRequestsPage() {
+  const router = useRouter();
   const [loadingId, setLoadingId] = useState(null);
   const [errors, setErrors] = useState({});
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -36,6 +39,14 @@ export default function LeaveRequestsPage() {
       reason: "",
     });
   };
+
+  useEffect(() => {
+    const role = getRole();
+
+    if (!role || !["admin", "hr"].includes(role.roleName)) {
+      router.push("/unauthorized");
+    }
+  }, []);
 
   const handleCreateLeaveRequest = async () => {
     if (!validate()) return;

@@ -11,10 +11,13 @@ import {
 
 import { getUsers } from "../../../services/users";
 import { getDepartments } from "../../../services/departments";
+import { getRole } from "../../../utils/auth";
+import { useRouter } from "next/navigation";
 
 import { FaEye, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 
 export default function EmployeesPage() {
+  const router = useRouter();
   const [errors, setErrors] = useState({});
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -40,6 +43,11 @@ export default function EmployeesPage() {
   });
 
   useEffect(() => {
+    const role = getRole();
+
+    if (!role || !["admin", "hr"].includes(role.roleName)) {
+      router.push("/unauthorized");
+    }
     fetchEmployees();
     fetchUsers();
     fetchDepartments();
