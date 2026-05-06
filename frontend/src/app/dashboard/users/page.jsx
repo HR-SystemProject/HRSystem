@@ -1,9 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getUsers, deleteUser, updateUser } from "../../../services/users";
+import { getRole } from "../../../utils/auth";
 import { FaEye, FaTrash } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 export default function UsersPage() {
+  const router = useRouter();
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [search, setSearch] = useState("");
@@ -19,6 +22,12 @@ export default function UsersPage() {
   const inactiveUsers = users.filter((u) => !u.isActive).length;
 
   useEffect(() => {
+    const role = getRole();
+
+    if (role !== "admin") {
+      router.push("/unauthorized");
+      return;
+    }
     fetchUsers();
   }, []);
 
@@ -81,7 +90,6 @@ export default function UsersPage() {
         isActive: !user.isActive,
       });
 
- 
       const newStatus = updated.data?.data?.isActive;
 
       setUsers((prev) =>

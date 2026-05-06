@@ -50,18 +50,28 @@ export default function EmployeesPage() {
       const res = await getEmployees();
       setEmployees(res.data.data);
     } catch (err) {
+      console.log("Employees failed:", err.response?.status);
+
       console.log(err);
     }
   };
 
   const fetchUsers = async () => {
-    const res = await getUsers();
-    setUsers(res.data.data);
+    try {
+      const res = await getUsers();
+      setUsers(res.data.data);
+    } catch (err) {
+      console.log("Users failed:", err.response?.status);
+    }
   };
 
   const fetchDepartments = async () => {
-    const res = await getDepartments();
-    setDepartments(res.data.data);
+    try {
+      const res = await getDepartments();
+      setDepartments(res.data.data);
+    } catch (err) {
+      console.log("Users failed:", err.response?.status);
+    }
   };
 
   const handleChange = (e) => {
