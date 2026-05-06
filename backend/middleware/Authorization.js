@@ -1,13 +1,13 @@
 const authorize = (roles) => {
   return (req, res, next) => {
     try {
-       if (!req.user || !req.user.role) {
+      if (!req.user || !req.user.role) {
         return res.status(401).json({
           success: false,
           message: "No user found in request",
         });
       }
-      
+
       const userRole = req.user.role;
 
       if (!roles.includes(userRole)) {
