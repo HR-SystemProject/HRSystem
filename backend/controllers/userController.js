@@ -299,7 +299,7 @@ const getUsers = async (req, res) => {
   try {
     const userRole = req.user.role;
 
-    if (userRole !== "admin") {
+    if (userRole !== "admin" && userRole !== "hr") {
       return res.status(403).json({
         success: false,
         message: "Forbidden",
@@ -327,7 +327,7 @@ const getUserById = async (req, res) => {
     const userRole = req.user.role;
     const userId = req.params.id;
 
-    if (userRole !== "admin") {
+    if (userRole !== "admin" && userRole !== "hr") {
       return res.status(403).json({
         success: false,
         message: "Forbidden",
@@ -362,7 +362,7 @@ const deleteUser = async (req, res) => {
     const userRole = req.user.role;
     const userId = req.params.id;
 
-    if (userRole !== "admin") {
+    if (userRole !== "admin" && userRole !== "hr") {
       return res.status(403).json({
         success: false,
         message: "Forbidden",
@@ -395,7 +395,7 @@ const updateUser = async (req, res) => {
   try {
     const userRole = req.user.role;
 
-    if (userRole !== "admin") {
+    if (userRole !== "admin" && userRole !== "hr") {
       return res.status(403).json({
         success: false,
         message: "Forbidden",
