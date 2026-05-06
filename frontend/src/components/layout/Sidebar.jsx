@@ -4,7 +4,7 @@ import Link from "next/link";
 export default function Sidebar({ role }) {
   const menu = {
     admin: [
-      { name: "Dashboard", path: "/dashboard" },
+      { name: "Dashboard", path: "/dashboard/dashboard" },
       { name: "Roles", path: "/dashboard/roles" },
       { name: "Users", path: "/dashboard/users" },
       { name: "Employees", path: "/dashboard/employees" },
@@ -15,20 +15,19 @@ export default function Sidebar({ role }) {
     ],
 
     hr: [
-      { name: "Dashboard", path: "/dashboard" },
-      { name: "Departments", path: "/dashboard/departments" },
+      { name: "Dashboard", path: "/dashboard/dashboard" },
       { name: "Employees", path: "/dashboard/employees" },
-      { name: "Users", path: "/dashboard/users" },
+      { name: "Departments", path: "/dashboard/departments" },
       { name: "Attendance", path: "/dashboard/attendance" },
       { name: "Leave Requests", path: "/dashboard/leaveRequests" },
       { name: "Payroll", path: "/dashboard/payroll" },
     ],
 
     user: [
-      { name: "My Profile", path: "/dashboard/my-profile" },
-      { name: "My Attendance", path: "/dashboard/my-attendance" },
-      { name: "My Leave Requests", path: "/dashboard/my-leaveRequests" },
-      { name: "My Payroll", path: "/dashboard/my-payroll" },
+      { name: "My Profile", path: "/dashboard/users" },
+      { name: "My Attendance", path: "/dashboard/attendance" },
+      { name: "My Leave Requests", path: "/dashboard/leaveRequests" },
+      { name: "My Payroll", path: "/dashboard/payroll" },
     ],
   };
   const items = menu[role] || [];

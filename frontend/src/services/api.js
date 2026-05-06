@@ -17,3 +17,14 @@ API.interceptors.request.use((config) => {
 
   return config;
 });
+
+API.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    console.log("❌ API ERROR:");
+    console.log("URL:", err.config?.url);
+    console.log("STATUS:", err.response?.status);
+    console.log("DATA:", err.response?.data);
+    return Promise.reject(err);
+  }
+);

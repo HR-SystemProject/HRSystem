@@ -7,6 +7,7 @@ import {
   updateDepartment,
   deleteDepartment,
 } from "../../../services/departments";
+import { getRole } from "../../../utils/auth";
 import { getUsers } from "../../../services/users";
 import { FaEdit, FaTrash, FaEye, FaPlus } from "react-icons/fa";
 import {
@@ -19,6 +20,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 export default function DepartmentsPage() {
+  const role = getRole();
+
   const [errors, setErrors] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -237,14 +240,15 @@ export default function DepartmentsPage() {
             Create and manage company departments
           </small>
         </div>
-
-        <button
-          onClick={openModal}
-          className="btn btn-success d-flex align-items-center gap-2"
-        >
-          <FaPlus size={14} />
-          Create New Department
-        </button>
+        {role === "admin" && (
+          <button
+            onClick={openModal}
+            className="btn btn-success d-flex align-items-center gap-2"
+          >
+            <FaPlus size={14} />
+            Create New Department
+          </button>
+        )}
       </div>
 
       {/* SEARCH */}
@@ -338,19 +342,23 @@ export default function DepartmentsPage() {
                       <FaEye />
                     </button>
 
-                    <button
-                      className="btn btn-sm btn-outline-warning"
-                      onClick={() => handleEditDepartment(dep)}
-                    >
-                      <FaEdit />
-                    </button>
+                    {role === "admin" && (
+                      <button
+                        className="btn btn-sm btn-outline-warning"
+                        onClick={() => handleEditDepartment(dep)}
+                      >
+                        <FaEdit />
+                      </button>
+                    )}
 
-                    <button
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={() => openDelete(dep._id)}
-                    >
-                      <FaTrash />
-                    </button>
+                    {role === "admin" && (
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => openDelete(dep._id)}
+                      >
+                        <FaTrash />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

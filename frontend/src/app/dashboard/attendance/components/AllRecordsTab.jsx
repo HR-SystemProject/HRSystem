@@ -182,7 +182,7 @@ export default function AllRecordsTab() {
         >
           <option value="">All Employees</option>
           {employees.map((emp) => (
-            <option key={emp._id} value={emp._id}>
+            <option key={emp._id || emp.email} value={emp._id}>
               {emp.name}
             </option>
           ))}
