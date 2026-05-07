@@ -1,11 +1,16 @@
 import { API } from "./api";
 
 // CheckIn
+export const checkIn = () => API.post("/attendance/checkIn");
 
 // Checkout
+export const checkOut = () => API.post("/attendance/checkOut");
 
 // get attendance/today
 export const getTodayAttendance = () => API.get("/attendance/today");
+
+// get attendance/myToday
+export const getMyTodayAttendance = () => API.get("/attendance/meToday");
 
 // get Attendance/month/:month
 
@@ -18,4 +23,4 @@ export const getEmployeeAttendance = (id) =>
   API.get(`/attendance/employee/${id}`);
 
 // get Attendance
-export const getAllAttendance = () => API.get("/attendance");
+export const getAttendance = () => API.get("/attendance");
