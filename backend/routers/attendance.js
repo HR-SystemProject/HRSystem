@@ -3,6 +3,7 @@ const attendanceRouter = express.Router();
 
 const {
   getTodayAttendance,
+  getMyTodayAttendance,
   getAttendance,
   getEmployeeAttendance,
   getMonthlyAttendance,
@@ -22,8 +23,11 @@ attendanceRouter.get(
   getTodayAttendance,
 );
 
+// get attendanceEmployee/today
+attendanceRouter.get("/meToday", auth, getMyTodayAttendance);
+
 // get Attendance
-attendanceRouter.get("/", auth, authorize(["hr" , "admin"]), getAttendance);
+attendanceRouter.get("/", auth, authorize(["hr", "admin"]), getAttendance);
 
 // get attendance/employee/:id
 attendanceRouter.get(
@@ -40,7 +44,7 @@ attendanceRouter.get("/month/:month", auth, getMonthlyAttendance);
 attendanceRouter.get(
   "/monthlyReport/:month",
   auth,
-  authorize(["hr" , "admin"]),
+  authorize(["hr", "admin"]),
   getMonthlyAttendanceReport,
 );
 

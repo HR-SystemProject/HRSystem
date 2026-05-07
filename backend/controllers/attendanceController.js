@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const attendanceModel = require("../models/attendanceSchema");
+const employeeModel = require("../models/EmployeeSchema");
 
 // get attendance/today
 const getTodayAttendance = async (req, res) => {
@@ -68,13 +69,6 @@ const getAttendance = async (req, res) => {
       .find()
       .populate("employeeId", "name email")
       .sort({ createdAt: -1 });
-
-    if (!data.length) {
-      return res.status(404).json({
-        success: false,
-        message: "No attendance records found",
-      });
-    }
 
     const formatted = data.map((item) => {
       let workingTime = null;
@@ -337,7 +331,18 @@ const getMonthlyAttendanceReport = async (req, res) => {
 // CheckIn
 const checkIn = async (req, res) => {
   try {
-    const employeeId = req.user.userId;
+    const employee = await employeeModel.findOne({
+      userId: req.user.userId,
+    });
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    const employeeId = employee._id;
 
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
@@ -393,7 +398,13 @@ const checkIn = async (req, res) => {
 
     const result = await attendance.save();
 
-    await result.populate("employeeId", "name email");
+    await result.populate({
+      path: "employeeId",
+      populate: {
+        path: "userId",
+        select: "name email",
+      },
+    });
 
     return res.status(201).json({
       success: true,
@@ -412,7 +423,18 @@ const checkIn = async (req, res) => {
 // Checkout
 const checkout = async (req, res) => {
   try {
-    const employeeId = req.user.userId;
+    const employee = await employeeModel.findOne({
+      userId: req.user.userId,
+    });
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    const employeeId = employee._id;
 
     const attendance = await attendanceModel
       .findOne({
@@ -427,7 +449,7 @@ const checkout = async (req, res) => {
     if (!attendance || attendance.checkOut) {
       return res.status(400).json({
         success: false,
-        message: "No active check-in found",
+        message: "You are not checked in for today",
       });
     }
 
@@ -442,11 +464,8 @@ const checkout = async (req, res) => {
 
     attendance.checkOut = checkOutTime;
     attendance.workingHours = diff / (1000 * 60 * 60);
-    attendance.markModified("workingHours");
 
     const result = await attendance.save();
-
-    await result.populate("employeeId", "name email");
 
     return res.status(200).json({
       success: true,
@@ -464,10 +483,61 @@ const checkout = async (req, res) => {
   }
 };
 
+// get my attendance/today
+const getMyTodayAttendance = async (req, res) => {
+  try {
+    const employee = await employeeModel.findOne({
+      userId: req.user.userId,
+    });
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    const employeeId = employee._id;
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const attendance = await attendanceModel
+      .findOne({
+        employeeId,
+        date: {
+          $gte: startOfDay,
+          $lte: endOfDay,
+        },
+      })
+      .populate({
+        path: "employeeId",
+        populate: {
+          path: "userId",
+          select: "name email",
+        },
+      });
+
+    return res.status(200).json({
+      success: true,
+      data: attendance || null,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   getTodayAttendance,
   getAttendance,
   getEmployeeAttendance,
+  getMyTodayAttendance,
   getMonthlyAttendance,
   getMonthlyAttendanceReport,
   checkIn,

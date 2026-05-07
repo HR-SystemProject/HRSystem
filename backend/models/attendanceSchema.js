@@ -4,7 +4,7 @@ const attendanceSchema = new mongoose.Schema(
   {
     employeeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Employee",
       required: true,
     },
     workingHours: { type: Number, default: 0 },

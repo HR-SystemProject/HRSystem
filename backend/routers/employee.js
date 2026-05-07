@@ -3,6 +3,7 @@ const employeeRouter = express.Router();
 
 const {
   createEmployee,
+  getMyEmployee,
   getEmployees,
   getEmployeeById,
   updateEmployee,
@@ -14,6 +15,9 @@ const authorize = require("../middleware/Authorization");
 
 // get employees
 employeeRouter.get("/", auth, authorize(["admin", "hr"]), getEmployees);
+
+// get my information
+employeeRouter.get("/me", auth, getMyEmployee);
 
 // get employees/ID
 employeeRouter.get("/:id", auth, authorize(["admin", "hr"]), getEmployeeById);
