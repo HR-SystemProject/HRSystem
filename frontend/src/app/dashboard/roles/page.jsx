@@ -221,6 +221,15 @@ export default function RolesPage() {
           <option value="hr">HR</option>
           <option value="user">User</option>
         </select>
+        <button
+          className="btn btn-outline-danger btn-sm"
+          onClick={() => {
+            setSearch("");
+            setRoleFilter("all");
+          }}
+        >
+          Reset
+        </button>
       </div>
 
       {/* View role */}

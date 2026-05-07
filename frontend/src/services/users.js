@@ -7,10 +7,10 @@ export const signup = (data) => {
   return API.post("/users/signup", data);
 };
 
-// LOGIN
-export const login = (data) => {
-  return API.post("/users/login", data);
-};
+// // LOGIN
+// export const login = (data) => {
+//   return API.post("/users/login", data);
+// };
 
 // LOGOUT
 export const logout = () => {

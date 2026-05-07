@@ -313,6 +313,15 @@ export default function EmployeesPage() {
             </option>
           ))}
         </select>
+        <button
+          className="btn btn-outline-danger btn-sm"
+          onClick={() => {
+            setSearch("");
+            setDepartmentFilter("all");
+          }}
+        >
+          Reset
+        </button>
       </div>
 
       {/* TABLE */}

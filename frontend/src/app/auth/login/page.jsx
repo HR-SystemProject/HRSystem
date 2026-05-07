@@ -17,7 +17,18 @@ export default function Login() {
 
   useEffect(() => {
     const token = getToken();
-    if (token) router.replace("/dashboard/dashboard");
+
+    if (!token) return;
+
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    const roleName = user?.role?.roleName?.toLowerCase();
+
+    if (roleName === "admin" || roleName === "hr") {
+      router.replace("/dashboard/dashboard");
+    } else if (roleName === "user") {
+      router.replace("/dashboard/userDashboard");
+    }
   }, [router]);
 
   const handleChange = (e) => {
@@ -39,18 +50,14 @@ export default function Login() {
       setLoading(true);
       setErrors({});
 
-      console.log("BEFORE LOGIN");
-
       const res = await login(form);
-
-      console.log(res.data);
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      const role = res.data.user.role;
+      const roleName = res.data.user.role?.roleName?.toLowerCase();
 
-      if (role === "user") {
+      if (roleName === "user") {
         router.push("/dashboard/userDashboard");
       } else {
         router.push("/dashboard/dashboard");
