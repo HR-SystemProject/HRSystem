@@ -144,17 +144,17 @@ const createPayroll = async (req, res) => {
       });
     }
 
-    const { employeeId, month, baseSalary, bonus, deductions, paymentDate } =
-      req.body;
+    const { employeeId, month, bonus, deductions, paymentDate } = req.body;
 
-    if (!employeeId || !month || !baseSalary) {
+    // required fields
+    if (!employeeId || !month) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
       });
     }
 
-    //month check
+    // month format validation
     const regex = /^\d{4}-\d{2}$/;
     if (!regex.test(month)) {
       return res.status(400).json({
@@ -163,8 +163,12 @@ const createPayroll = async (req, res) => {
       });
     }
 
-    //employee check
+    // normalize month
+    const normalizedMonth = month.trim().slice(0, 7);
+
+    // check employee exists
     const employee = await employeeModel.findById(employeeId);
+
     if (!employee) {
       return res.status(404).json({
         success: false,
@@ -172,37 +176,55 @@ const createPayroll = async (req, res) => {
       });
     }
 
-    //no repeat
-    const exists = await payrollModel.findOne({ employeeId, month });
+    const baseSalary = employee.salary;
+
+    // prevent duplicate payroll
+    const exists = await payrollModel.findOne({
+      employeeId,
+      month: normalizedMonth,
+    });
+
     if (exists) {
       return res.status(400).json({
         success: false,
-        message: "Payroll already exists for this month",
+        message: `Payroll already exists for ${normalizedMonth}`,
       });
     }
 
+    // calculate net salary
     const netSalary =
-      Number(baseSalary) + Number(bonus || 0) - Number(deductions || 0);
+      Number(baseSalary || 0) +
+      Number(bonus || 0) -
+      Number(deductions || 0);
 
+    // create payroll
     const newPayroll = new payrollModel({
       employeeId,
-      month,
+      month: normalizedMonth,
       baseSalary,
-      bonus,
-      deductions,
+      bonus: Number(bonus || 0),
+      deductions: Number(deductions || 0),
       netSalary,
       paymentDate: paymentDate || null,
       status: "pending",
     });
 
     const result = await newPayroll.save();
-    await result.populate("employeeId", "name email jobTitle");
+
+    await result.populate({
+      path: "employeeId",
+      populate: [
+        { path: "userId", select: "name email" },
+        { path: "departmentId", select: "name" },
+      ],
+    });
 
     return res.status(201).json({
       success: true,
       message: "Payroll created successfully",
       data: result,
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -223,7 +245,7 @@ const updatePayroll = async (req, res) => {
       });
     }
 
-    const { baseSalary, bonus, deductions } = req.body;
+    const { bonus, deductions } = req.body;
 
     const payroll = await payrollModel.findById(req.params.id);
 
@@ -234,25 +256,42 @@ const updatePayroll = async (req, res) => {
       });
     }
 
-    const newBase = Number(baseSalary ?? payroll.baseSalary);
+    if (payroll.status === "paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Paid payroll cannot be updated",
+      });
+    }
+
+    const employee = await employeeModel.findById(payroll.employeeId);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    const baseSalary = employee.salary;
     const newBonus = Number(bonus ?? payroll.bonus);
     const newDeductions = Number(deductions ?? payroll.deductions);
 
-    if (isNaN(newBase) || isNaN(newBonus) || isNaN(newDeductions)) {
+    if (isNaN(newBonus) || isNaN(newDeductions)) {
       return res.status(400).json({
         success: false,
         message: "Invalid numeric values",
       });
     }
 
-    const netSalary =
-      Number(newBase) + Number(newBonus) - Number(newDeductions);
+    const netSalary = baseSalary + newBonus - newDeductions;
 
     const updated = await payrollModel
       .findByIdAndUpdate(
         req.params.id,
         {
-          ...req.body,
+          bonus: newBonus,
+          deductions: newDeductions,
+          baseSalary,
           netSalary,
         },
         { new: true },
