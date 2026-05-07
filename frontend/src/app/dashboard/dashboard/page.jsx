@@ -1,9 +1,15 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { getEmployees } from "../../../services/employees";
+
+import { getEmployees, getMyEmployee } from "../../../services/employees";
 import { getUsers } from "../../../services/users";
 import { getDepartments } from "../../../services/departments";
-import { getAllAttendance } from "../../../services/attendance";
+import {
+  getAttendance,
+  checkIn,
+  checkOut,
+  getMyTodayAttendance,
+} from "../../../services/attendance";
 import { getPayrolls } from "../../../services/payroll";
 import { useRouter } from "next/navigation";
 import { getRole } from "../../../utils/auth";
@@ -27,16 +33,139 @@ import {
   FaFileAlt,
   FaMoneyBill,
 } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 export default function AdminDashboard() {
   const role = getRole();
-
   const router = useRouter();
+
   const [employees, setEmployees] = useState([]);
+  const [employee, setEmployee] = useState(null);
   const [users, setUsers] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [payrolls, setPayrolls] = useState([]);
+  const [todayAttendance, setTodayAttendance] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [loadingAtt, setLoadingAtt] = useState(false);
+
+  useEffect(() => {
+    const role = getRole();
+
+    const roleName =
+      typeof role === "string" ? role : role?.roleName || role?.role?.roleName;
+
+    if (!["admin", "hr"].includes(roleName)) {
+      router.replace("/unauthorized");
+      return;
+    }
+
+    fetchEmployee();
+    fetchTodayAttendance();
+  }, []);
+
+  const fetchEmployee = async () => {
+    try {
+      setLoading(true);
+
+      const res = await getMyEmployee();
+
+      setEmployee(res.data.data);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTodayAttendance = async () => {
+    try {
+      const res = await getMyTodayAttendance();
+      setTodayAttendance(res.data.data || null);
+    } catch (err) {
+      console.log(err);
+      setTodayAttendance(null);
+    }
+  };
+
+  const hasCheckIn = !!todayAttendance?.checkIn;
+  const hasCheckOut = !!todayAttendance?.checkOut;
+
+  const status = !hasCheckIn ? "idle" : hasCheckOut ? "out" : "in";
+
+  const handleCheckIn = async () => {
+    try {
+      setLoadingAtt(true);
+
+      await checkIn();
+
+      await fetchTodayAttendance();
+
+      Swal.fire({
+        icon: "success",
+        title: "Checked In",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        text: err.response?.data?.message,
+      });
+    } finally {
+      setLoadingAtt(false);
+    }
+  };
+
+  const handleCheckOut = async () => {
+    if (!todayAttendance?.checkIn) return;
+
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to check out now?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, check out",
+      confirmButtonColor: "#dc3545",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      setLoadingAtt(true);
+
+      const res = await checkOut();
+
+      await fetchTodayAttendance();
+
+      Swal.fire({
+        icon: "success",
+        title: "Checked Out",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        text: err.response?.data?.message || "Error",
+      });
+    } finally {
+      setLoadingAtt(false);
+    }
+  };
+
+  const getColor = () => {
+    if (status === "idle") return "#6c757d";
+    if (status === "in") return "#28a745";
+    return "#dc3545";
+  };
+
+  const getText = () => {
+    if (status === "idle") return "Check In";
+    if (status === "in") return "Check Out";
+    return "Done";
+  };
 
   const COLORS = [
     "#22c55e",
@@ -52,7 +181,6 @@ export default function AdminDashboard() {
     const fetchData = async () => {
       try {
         const role = getRole();
-
 
         if (!role || !["admin", "hr"].includes(role.roleName)) {
           router.push("/unauthorized");
@@ -82,10 +210,15 @@ export default function AdminDashboard() {
 
     const fetchAttendance = async () => {
       try {
-        const res = await getAllAttendance();
+        const res = await getAttendance();
         setAttendance(res.data.data || []);
       } catch (error) {
-        console.log(error);
+        console.log("ERROR FULL:", error);
+        console.log("MESSAGE:", error.message);
+        console.log("RESPONSE:", error.response);
+        console.log("DATA:", error.response?.data);
+        console.log("STATUS:", error.response?.status);
+        console.log("URL:", error.config?.url);
       }
     };
 
@@ -156,61 +289,151 @@ export default function AdminDashboard() {
 
   return (
     <div className="container py-5">
-      {/* Cards */}
-      <div className="row g-3 mb-4 justify-content-center">
-        <div className="col-md-3">
-          <div
-            className="p-3 shadow-sm rounded text-center transition-card"
-            style={{
-              background: "linear-gradient(135deg, #d9ffea, #a8f0c6)",
-              color: "#116336",
-              fontWeight: "bold",
-            }}
-          >
-            <h6>Total Employees</h6>
-            <h4>{totalEmployees}</h4>
+      {/* TOP SECTION */}
+      {/* TOP DASHBOARD SECTION */}
+      <div className="row g-4 mb-4">
+        {/* STATS CARDS */}
+        <div className="col-lg-8">
+          <div className="row g-3">
+            <div className="col-md-6">
+              <div
+                className="p-3 shadow-sm rounded text-center transition-card"
+                style={{
+                  background: "linear-gradient(135deg, #d9ffea, #a8f0c6)",
+                  color: "#116336",
+                  fontWeight: "bold",
+                }}
+              >
+                <h6>Total Employees</h6>
+                <h4>{totalEmployees}</h4>
+              </div>
+            </div>
+
+            <div className="col-md-6">
+              <div
+                className="p-3 shadow-sm rounded text-center transition-card"
+                style={{
+                  background: "linear-gradient(135deg, #d9daff, #b3b7ff)",
+                  color: "#201163",
+                  fontWeight: "bold",
+                }}
+              >
+                <h6>Total Users</h6>
+                <h4>{totalUsers}</h4>
+              </div>
+            </div>
+
+            <div className="col-md-6">
+              <div
+                className="p-3 shadow-sm rounded text-center transition-card"
+                style={{
+                  background: "linear-gradient(135deg, #ffdcd9, #ffb3ad)",
+                  color: "#8f3714",
+                  fontWeight: "bold",
+                }}
+              >
+                <h6>Departments</h6>
+                <h4>{totalDepartments}</h4>
+              </div>
+            </div>
+
+            <div className="col-md-6">
+              <div
+                className="p-3 shadow-sm rounded text-center transition-card"
+                style={{
+                  background: "linear-gradient(135deg, #fff3cd, #ffd966)",
+                  color: "#7a5a00",
+                  fontWeight: "bold",
+                }}
+              >
+                <h6>Payroll - {monthName}</h6>
+                <h4>${totalMonthlyPayroll}</h4>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="col-md-3">
-          <div
-            className="p-3 shadow-sm rounded text-center transition-card"
-            style={{
-              background: "linear-gradient(135deg, #d9daff, #b3b7ff)",
-              color: "#201163",
-              fontWeight: "bold",
-            }}
-          >
-            <h6>Total Users</h6>
-            <h4>{totalUsers}</h4>
-          </div>
-        </div>
+        {/* ATTENDANCE CARD */}
+        <div className="col-lg-4">
+          <div className="bg-white shadow-sm rounded-4 p-0 h-100 text-center">
+            <small className="fw-bold d-block mb-3">Today Attendance</small>
 
-        <div className="col-md-3">
-          <div
-            className="p-3 shadow-sm rounded text-center transition-card"
-            style={{
-              background: "linear-gradient(135deg, #ffdcd9, #ffb3ad)",
-              color: "#8f3714",
-              fontWeight: "bold",
-            }}
-          >
-            <h6>Total Departments</h6>
-            <h4>{totalDepartments}</h4>
-          </div>
-        </div>
+            <div className="mb-3">
+              <span
+                className={`badge ${
+                  !todayAttendance?.checkIn
+                    ? "bg-secondary"
+                    : todayAttendance?.checkOut
+                      ? "bg-danger"
+                      : "bg-success"
+                }`}
+              >
+                {!todayAttendance?.checkIn
+                  ? "Not Checked In"
+                  : todayAttendance?.checkOut
+                    ? "Checked Out"
+                    : "Checked In"}
+              </span>
+            </div>
 
-        <div className="col-md-3">
-          <div
-            className="p-3 shadow-sm rounded text-center transition-card"
-            style={{
-              background: "linear-gradient(135deg, #fff3cd, #ffd966)",
-              color: "#7a5a00",
-              fontWeight: "bold",
-            }}
-          >
-            <h6>Payroll - {monthName}</h6>
-            <h4>${totalMonthlyPayroll}</h4>
+            {/* BIG BUTTONS */}
+            <div className="d-flex justify-content-center gap-3 mb-3">
+              <div
+                onClick={!todayAttendance?.checkIn ? handleCheckIn : null}
+                className="rounded-circle d-flex align-items-center justify-content-center"
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  background: todayAttendance?.checkIn ? "#adb5bd" : "#28a745",
+                  color: "white",
+                  cursor: todayAttendance?.checkIn ? "not-allowed" : "pointer",
+                }}
+              >
+                IN
+              </div>
+
+              <div
+                onClick={
+                  todayAttendance?.checkIn && !todayAttendance?.checkOut
+                    ? handleCheckOut
+                    : null
+                }
+                className="rounded-circle d-flex align-items-center justify-content-center"
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  background: todayAttendance?.checkOut
+                    ? "#dc3545"
+                    : todayAttendance?.checkIn
+                      ? "#ffc107"
+                      : "#adb5bd",
+                  color: "white",
+                  cursor:
+                    todayAttendance?.checkIn && !todayAttendance?.checkOut
+                      ? "pointer"
+                      : "not-allowed",
+                }}
+              >
+                OUT
+              </div>
+            </div>
+
+            {/* TIMES */}
+            <div className="small text-muted">
+              <div>
+                <b>Check In:</b>{" "}
+                {todayAttendance?.checkIn
+                  ? new Date(todayAttendance.checkIn).toLocaleTimeString()
+                  : "--"}
+              </div>
+
+              <div>
+                <b>Check Out:</b>{" "}
+                {todayAttendance?.checkOut
+                  ? new Date(todayAttendance.checkOut).toLocaleTimeString()
+                  : "--"}
+              </div>
+            </div>
           </div>
         </div>
       </div>
