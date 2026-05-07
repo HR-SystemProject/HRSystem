@@ -306,6 +306,17 @@ export default function LeaveRequestsPage() {
           <option value="approved">Approved</option>
           <option value="rejected">Rejected</option>
         </select>
+
+        <button
+          className="btn btn-outline-danger btn-sm"
+          onClick={() => {
+            setSearch("");
+            setStatusFilter("all");
+            setPage(1);
+          }}
+        >
+          Reset
+        </button>
       </div>
 
       <div className="card shadow-sm border-0">

@@ -64,7 +64,7 @@ export default function AttendancePage() {
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div className="container py-1">
+    <div className="container py-5">
       {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center mb-3 p-3 bg-white shadow-sm rounded">
         {/* LEFT */}
@@ -158,7 +158,7 @@ export default function AttendancePage() {
 
       {/* TABLE SECTION */}
       {filteredAttendance.length === 0 ? (
-        <div className="text-center text-muted py-5">
+        <div className=" text-muted py-5 mx-auto">
           <h5>No attendance records for today</h5>
           <small>Employees haven’t checked in yet</small>
         </div>

@@ -182,7 +182,7 @@ export default function AllRecordsTab() {
         </select>
 
         <button
-          className="btn btn-secondary btn-sm"
+          className="btn btn-outline-danger btn-sm"
           onClick={() => {
             setSearch("");
             setSelectedDate("");

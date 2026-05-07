@@ -9,11 +9,12 @@ export default function MyPayrollPage() {
 
   useEffect(() => {
     const role = getRole();
+    const roleName = typeof role === "string" ? role : role?.roleName;
 
-    const roleName =
-      typeof role === "string" ? role : role?.roleName || role?.role?.roleName;
+    console.log(roleName)
+    const isAdminOrHR = ["admin", "hr"].includes(roleName);
 
-    if (roleName !== "user") {
+    if (roleName !== "admin" || roleName !== "hr") {
       router.replace("/unauthorized");
     }
   }, [router]);

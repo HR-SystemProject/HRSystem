@@ -19,7 +19,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import {useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 export default function DepartmentsPage() {
   const router = useRouter();
   const role = getRole();
@@ -191,13 +191,20 @@ export default function DepartmentsPage() {
   };
 
   const filteredDepartments = departments.filter((dep) => {
+    const searchText = search.toLowerCase();
+
+    const matchSearch =
+      dep.name?.toLowerCase().includes(searchText) ||
+      dep.description?.toLowerCase().includes(searchText) ||
+      dep.managerId?.name?.toLowerCase().includes(searchText);
+
     const matchDepartment =
       departmentFilter === "" || dep.name === departmentFilter;
 
     const matchManager =
       managerFilter === "" || dep.managerId?._id === managerFilter;
 
-    return matchDepartment && matchManager;
+    return matchSearch && matchDepartment && matchManager;
   });
 
   const totalDepartments = departments.length;
@@ -293,6 +300,17 @@ export default function DepartmentsPage() {
             </option>
           ))}
         </select>
+        <button
+          className="btn btn-outline-danger btn-sm"
+          onClick={() => {
+            setSearch("");
+            setDepartmentFilter("");
+            setManagerFilter("");
+            setCurrentPage(1);
+          }}
+        >
+          Reset
+        </button>
       </div>
 
       {/* CHART */}

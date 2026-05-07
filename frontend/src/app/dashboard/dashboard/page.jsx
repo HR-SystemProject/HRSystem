@@ -4,6 +4,7 @@ import { getEmployees } from "../../../services/employees";
 import { getUsers } from "../../../services/users";
 import { getDepartments } from "../../../services/departments";
 import { getAllAttendance } from "../../../services/attendance";
+import { getPayrolls } from "../../../services/payroll";
 import { useRouter } from "next/navigation";
 import { getRole } from "../../../utils/auth";
 import {
@@ -35,6 +36,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [attendance, setAttendance] = useState([]);
+  const [payrolls, setPayrolls] = useState([]);
 
   const COLORS = [
     "#22c55e",
@@ -51,10 +53,10 @@ export default function AdminDashboard() {
       try {
         const role = getRole();
 
-        console.log("ROLE FROM TOKEN:", role);
 
         if (!role || !["admin", "hr"].includes(role.roleName)) {
           router.push("/unauthorized");
+          return;
         }
         const empRes = await getEmployees();
         const userRes = await getUsers();
@@ -72,6 +74,12 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
+    const role = getRole();
+
+    if (!role || !["admin", "hr"].includes(role.roleName)) {
+      return;
+    }
+
     const fetchAttendance = async () => {
       try {
         const res = await getAllAttendance();
@@ -83,6 +91,31 @@ export default function AdminDashboard() {
 
     fetchAttendance();
   }, []);
+
+  useEffect(() => {
+    const fetchPayrolls = async () => {
+      try {
+        const res = await getPayrolls();
+        setPayrolls(res.data.data || []);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchPayrolls();
+  }, []);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  const monthlyPayroll = payrolls.filter((p) => p.month === currentMonth);
+
+  const totalMonthlyPayroll = monthlyPayroll.reduce(
+    (sum, p) => sum + (p.netSalary || 0),
+    0,
+  );
+  const monthName = new Date().toLocaleString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
 
   // Attendance chart
   const chartData = [
@@ -164,6 +197,20 @@ export default function AdminDashboard() {
           >
             <h6>Total Departments</h6>
             <h4>{totalDepartments}</h4>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div
+            className="p-3 shadow-sm rounded text-center transition-card"
+            style={{
+              background: "linear-gradient(135deg, #fff3cd, #ffd966)",
+              color: "#7a5a00",
+              fontWeight: "bold",
+            }}
+          >
+            <h6>Payroll - {monthName}</h6>
+            <h4>${totalMonthlyPayroll}</h4>
           </div>
         </div>
       </div>
