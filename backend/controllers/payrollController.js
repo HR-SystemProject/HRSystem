@@ -93,39 +93,25 @@ const getEmployeePayroll = async (req, res) => {
       });
     }
 
-    const payroll = await payrollModel
+    const payrolls = await payrollModel
       .find({
         employeeId: employee._id,
       })
       .populate({
         path: "employeeId",
         populate: [
-          {
-            path: "userId",
-            select: "name email",
-          },
-          {
-            path: "departmentId",
-            select: "name",
-          },
+          { path: "userId", select: "name email" },
+          { path: "departmentId", select: "name" },
         ],
       });
 
-    if (!payroll.length) {
-      return res.status(200).json({
-        success: true,
-        message: "No payroll records found",
-        data: [],
-      });
-    }
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Payroll fetched successfully",
-      data: payroll,
+      message: "My payroll fetched successfully",
+      data: payrolls,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -193,9 +179,7 @@ const createPayroll = async (req, res) => {
 
     // calculate net salary
     const netSalary =
-      Number(baseSalary || 0) +
-      Number(bonus || 0) -
-      Number(deductions || 0);
+      Number(baseSalary || 0) + Number(bonus || 0) - Number(deductions || 0);
 
     // create payroll
     const newPayroll = new payrollModel({
@@ -224,7 +208,6 @@ const createPayroll = async (req, res) => {
       message: "Payroll created successfully",
       data: result,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
