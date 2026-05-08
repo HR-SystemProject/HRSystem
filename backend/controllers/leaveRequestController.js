@@ -227,6 +227,71 @@ const updateLeaveRequestsStatus = async (req, res) => {
   }
 };
 
+// update leaveRequests/:id
+const updatedMyLeaveRequest = async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const leaveRequest = await leaveRequestModel.findById(id);
+
+    if (!leaveRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "Leave request not found",
+      });
+    }
+
+    if (leaveRequest.employeeId.toString() !== req.user.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    if (leaveRequest.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Only pending requests can be updated",
+      });
+    }
+
+    const { leaveType, startDate, endDate, reason } = req.body;
+
+    if (startDate && endDate) {
+      if (new Date(startDate) > new Date(endDate)) {
+        return res.status(400).json({
+          success: false,
+          message: "Start date cannot be after end date",
+        });
+      }
+    }
+
+    const updated = await leaveRequestModel
+      .findByIdAndUpdate(
+        id,
+        {
+          leaveType,
+          startDate,
+          endDate,
+          reason,
+        },
+        { new: true },
+      )
+      .populate("employeeId", "name email");
+
+    res.status(200).json({
+      success: true,
+      message: "Leave request updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 // Cancel leaveRequest/:id
 const cancelLeaveRequest = async (req, res) => {
   try {
@@ -276,5 +341,6 @@ module.exports = {
   getLeaveRequestsTypes,
   createLeaveRequest,
   updateLeaveRequestsStatus,
+  updatedMyLeaveRequest,
   cancelLeaveRequest,
 };
