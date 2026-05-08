@@ -31,8 +31,9 @@ export default function AllRecordsTab() {
   const fetchAttendance = async () => {
     try {
       setLoading(true);
-      const res = await getAllAttendance();
+      const res = await getAttendance();
       setAttendance(res.data.data);
+      
     } catch (err) {
       setError(err.response?.data?.message || "Error loading data");
     } finally {
@@ -78,7 +79,9 @@ export default function AllRecordsTab() {
   // ---------------- FILTER + SEARCH + SORT ----------------
   const processedData = attendance
     .filter((item) =>
-      item.employeeId?.name?.toLowerCase().includes(search.toLowerCase()),
+      (item.employeeId?.name || "")
+        .toLowerCase()
+        .includes(search.toLowerCase()),
     )
     .filter((item) => {
       if (selectedDate) {
@@ -236,9 +239,11 @@ export default function AllRecordsTab() {
           <tbody>
             {paginatedData.length > 0 ? (
               paginatedData.map((item) => (
-                <tr key={item._id ?? item.date + item.employeeId?._id}>
+                <tr key={item._id || item.date}>
                   <td>
-                    <div className="fw-semibold">{item.employeeId?.name}</div>
+                    <div className="fw-semibold">
+                      {item.employeeId?.userId?.name}
+                    </div>
                     <small className="text-muted">
                       {item.employeeId?.email}
                     </small>
