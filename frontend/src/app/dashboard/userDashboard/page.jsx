@@ -11,6 +11,7 @@ import {
   checkIn,
   checkOut,
   getMyTodayAttendance,
+  getMonthlyAttendance,
 } from "../../../services/attendance";
 
 export default function UserDashboardPage() {
@@ -19,6 +20,7 @@ export default function UserDashboardPage() {
   const [employee, setEmployee] = useState(null);
   const [todayAttendance, setTodayAttendance] = useState(null);
   const [myLeaveRequests, setMyLeaveRequests] = useState([]);
+  const [monthly, setMonthly] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [loadingAtt, setLoadingAtt] = useState(false);
@@ -69,6 +71,16 @@ export default function UserDashboardPage() {
     };
 
     fetch();
+  }, []);
+
+  const fetchMonthly = async () => {
+    const month = new Date().getMonth() + 1;
+    const res = await getMonthlyAttendance(month);
+    setMonthly(res.data.data);
+  };
+
+  useEffect(() => {
+    fetchMonthly();
   }, []);
 
   const hasCheckIn = !!todayAttendance?.checkIn;
@@ -159,6 +171,10 @@ export default function UserDashboardPage() {
     approved: myLeaveRequests.filter((r) => r.status === "approved").length,
     rejected: myLeaveRequests.filter((r) => r.status === "rejected").length,
   };
+
+  const monthlyHours = monthly?.totalHours ? Number(monthly.totalHours) : 0;
+
+  const percent = 160 > 0 ? (monthlyHours / 160) * 100 : 0;
   return (
     <div className="container py-4">
       {/* EMPLOYEE CARD */}
@@ -181,130 +197,163 @@ export default function UserDashboardPage() {
               src="/Userdashboard.jpg"
               alt="dashboard"
               className="img-fluid"
-              style={{
-                maxHeight: "240px",
-                objectFit: "contain",
-              }}
+              style={{ maxHeight: "240px", objectFit: "contain" }}
             />
           </div>
         </div>
       </div>
 
-      <div className="d-flex gap-3 flex-wrap">
+      {/* DASHBOARD CARDS */}
+      <div className="row g-4">
         {/* ATTENDANCE */}
-        <div
-          className="bg-white shadow-sm rounded-4 p-4 text-center card"
-          style={{ width: "300px" }}
-        >
-          <small className="fw-bold d-block mb-3">Attendance</small>
+        <div className="col-12 col-md-4">
+          <div className="bg-white shadow-sm rounded-4 p-4 text-center h-100">
+            <small className="fw-bold d-block mb-3">Attendance</small>
 
-          <div className="mb-3">
-            <span
-              className={`badge ${
-                !todayAttendance?.checkIn
-                  ? "bg-secondary"
+            <div className="mb-3">
+              <span
+                className={`badge ${
+                  !todayAttendance?.checkIn
+                    ? "bg-secondary"
+                    : todayAttendance?.checkOut
+                      ? "bg-danger"
+                      : "bg-success"
+                }`}
+              >
+                {!todayAttendance?.checkIn
+                  ? "Not Checked In"
                   : todayAttendance?.checkOut
-                    ? "bg-danger"
-                    : "bg-success"
-              }`}
-            >
-              {!todayAttendance?.checkIn
-                ? "Not Checked In"
-                : todayAttendance?.checkOut
-                  ? "Checked Out"
-                  : "Checked In"}
-            </span>
-          </div>
-
-          <div className="d-flex justify-content-center gap-3">
-            <div
-              onClick={!todayAttendance?.checkIn ? handleCheckIn : null}
-              className="rounded-circle d-flex align-items-center justify-content-center"
-              style={{
-                width: "85px",
-                height: "85px",
-                background: todayAttendance?.checkIn ? "#adb5bd" : "#28a745",
-                color: "white",
-                cursor: todayAttendance?.checkIn ? "not-allowed" : "pointer",
-                flexDirection: "column",
-              }}
-            >
-              <span style={{ fontSize: "40px" }}>𖦹</span>
-              <small style={{ fontSize: "11px" }}>In</small>
+                    ? "Checked Out"
+                    : "Checked In"}
+              </span>
             </div>
 
-            <div
-              onClick={
-                todayAttendance?.checkIn && !todayAttendance?.checkOut
-                  ? handleCheckOut
-                  : null
-              }
-              className="rounded-circle d-flex align-items-center justify-content-center"
-              style={{
-                width: "85px",
-                height: "85px",
-                background: !todayAttendance?.checkIn
-                  ? "#adb5bd"
-                  : todayAttendance?.checkOut
-                    ? "#dc3545"
-                    : "#ffc107",
-                color: "white",
-                cursor:
+            <div className="d-flex justify-content-center gap-3 mb-3">
+              {/* CHECK IN */}
+              <div
+                onClick={!todayAttendance?.checkIn ? handleCheckIn : null}
+                className="rounded-circle d-flex align-items-center justify-content-center"
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  background: todayAttendance?.checkIn ? "#adb5bd" : "#28a745",
+                  color: "white",
+                  cursor: todayAttendance?.checkIn ? "not-allowed" : "pointer",
+                  flexDirection: "column",
+                }}
+              >
+                <span style={{ fontSize: "32px" }}>𖦹</span>
+                <small style={{ fontSize: "10px" }}>In</small>
+              </div>
+
+              {/* CHECK OUT */}
+              <div
+                onClick={
                   todayAttendance?.checkIn && !todayAttendance?.checkOut
-                    ? "pointer"
-                    : "not-allowed",
-                flexDirection: "column",
-              }}
-            >
-              <span style={{ fontSize: "40px" }}>𖦹</span>
-              <small style={{ fontSize: "11px" }}>Out</small>
+                    ? handleCheckOut
+                    : null
+                }
+                className="rounded-circle d-flex align-items-center justify-content-center"
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  background: !todayAttendance?.checkIn
+                    ? "#adb5bd"
+                    : todayAttendance?.checkOut
+                      ? "#dc3545"
+                      : "#ffc107",
+                  color: "white",
+                  cursor:
+                    todayAttendance?.checkIn && !todayAttendance?.checkOut
+                      ? "pointer"
+                      : "not-allowed",
+                  flexDirection: "column",
+                }}
+              >
+                <span style={{ fontSize: "32px" }}>𖦹</span>
+                <small style={{ fontSize: "10px" }}>Out</small>
+              </div>
             </div>
-          </div>
 
-          <div className="mt-4 small text-muted">
-            <div>
-              <strong>Check In:</strong>{" "}
-              {todayAttendance?.checkIn
-                ? new Date(todayAttendance.checkIn).toLocaleTimeString()
-                : "--"}
-            </div>
+            <div className="small text-muted text-start">
+              <div className="d-flex justify-content-between">
+                <span>Check In</span>
+                <span className="fw-semibold">
+                  {todayAttendance?.checkIn
+                    ? new Date(todayAttendance.checkIn).toLocaleTimeString()
+                    : "--"}
+                </span>
+              </div>
 
-            <div>
-              <strong>Check Out:</strong>{" "}
-              {todayAttendance?.checkOut
-                ? new Date(todayAttendance.checkOut).toLocaleTimeString()
-                : "--"}
+              <div className="d-flex justify-content-between">
+                <span>Check Out</span>
+                <span className="fw-semibold">
+                  {todayAttendance?.checkOut
+                    ? new Date(todayAttendance.checkOut).toLocaleTimeString()
+                    : "--"}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* LEAVE REQUEST STATS */}
-        <div
-          className="bg-white shadow-sm rounded-4 p-4 card"
-          style={{ width: "300px" }}
-        >
-          <small className="fw-bold d-block mb-4">Leave Requests</small>
+        {/* MONTHLY STATS */}
+        <div className="col-12 col-md-4">
+          <div className="bg-white shadow-sm rounded-4 p-4 h-100">
+            <small className="fw-bold d-block mb-3">Monthly Stats</small>
 
-          <div className="d-flex flex-column gap-3">
-            <div className="d-flex justify-content-between align-items-center py-1">
-              <span className="text-muted">Pending</span>
-              <span className="badge bg-warning text-dark px-3 py-2">
-                {leaveStats.pending}
-              </span>
+            <div className="d-flex flex-column gap-3">
+              <div className="d-flex justify-content-between">
+                <span className="text-muted">Working Hours</span>
+
+                
+                  {monthlyHours.toFixed(1)}h ({percent.toFixed(0)}%)
+                
+              </div>
+
+              <div className="d-flex justify-content-between">
+                <span className="text-muted">Late</span>
+                <span className="badge bg-warning text-dark px-3 py-2">
+                  {monthly?.lateDays || 0}
+                </span>
+              </div>
+
+              <div className="d-flex justify-content-between">
+                <span className="text-muted">Absent</span>
+                <span className="badge bg-danger px-3 py-2">
+                  {monthly?.absentDays || 0}
+                </span>
+              </div>
             </div>
+          </div>
+        </div>
 
-            <div className="d-flex justify-content-between align-items-center py-1">
-              <span className="text-muted">Approved</span>
-              <span className="badge bg-success px-3 py-2">
-                {leaveStats.approved}
-              </span>
-            </div>
+        {/* LEAVE REQUESTS */}
+        <div className="col-12 col-md-4">
+          <div className="bg-white shadow-sm rounded-4 p-4 h-100">
+            <small className="fw-bold d-block mb-3">Leave Requests</small>
 
-            <div className="d-flex justify-content-between align-items-center py-1">
-              <span className="text-muted">Rejected</span>
-              <span className="badge bg-danger px-3 py-2">
-                {leaveStats.rejected}
-              </span>
+            <div className="d-flex flex-column gap-3">
+              <div className="d-flex justify-content-between">
+                <span className="text-muted">Pending</span>
+                <span className="badge bg-warning text-dark px-3 py-2">
+                  {leaveStats.pending}
+                </span>
+              </div>
+
+              <div className="d-flex justify-content-between">
+                <span className="text-muted">Approved</span>
+                <span className="badge bg-success px-3 py-2">
+                  {leaveStats.approved}
+                </span>
+              </div>
+
+              <div className="d-flex justify-content-between">
+                <span className="text-muted">Rejected</span>
+                <span className="badge bg-danger px-3 py-2">
+                  {leaveStats.rejected}
+                </span>
+              </div>
             </div>
           </div>
         </div>

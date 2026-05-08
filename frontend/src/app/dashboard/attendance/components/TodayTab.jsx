@@ -21,9 +21,10 @@ export default function AttendancePage() {
   const fetchAttendanceTodayData = async () => {
     try {
       const res = await getTodayAttendance();
-      setAttendance(res.data.data);
+      setAttendance(res.data.data || []); // مهم جداً
     } catch (err) {
       setError(err.response?.data?.message || "Error loading data");
+      setAttendance([]);
     } finally {
       setLoading(false);
     }
@@ -31,15 +32,12 @@ export default function AttendancePage() {
 
   const totalEmployees = attendance.length;
 
-  const presentEmployees = attendance.filter(
-    (a) => a.status === "present",
-  ).length;
-
-  const lateEmployees = attendance.filter((a) => a.status === "late").length;
-
-  const absentEmployees = attendance.filter(
-    (a) => a.status === "absent",
-  ).length;
+  const presentEmployees =
+    attendance?.filter((a) => a.status === "present")?.length || 0;
+  const lateEmployees =
+    attendance?.filter((a) => a.status === "late")?.length || 0;
+  const absentEmployees =
+    attendance?.filter((a) => a.status === "absent")?.length || 0;
 
   const filteredAttendance = attendance.filter((item) =>
     item.userId?.name?.toLowerCase().includes(search.toLowerCase()),
@@ -51,7 +49,10 @@ export default function AttendancePage() {
     startIndex + itemsPerPage,
   );
 
-  const totalPages = Math.ceil(filteredAttendance.length / itemsPerPage);
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredAttendance.length / itemsPerPage),
+  );
 
   if (loading)
     return (
@@ -223,35 +224,37 @@ export default function AttendancePage() {
           </tbody>
         </table>
       )}
-      <div className="d-flex justify-content-center mt-4 gap-2">
-        <button
-          className="btn btn-outline-secondary btn-sm"
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage(currentPage - 1)}
-        >
-          Prev
-        </button>
-
-        {Array.from({ length: totalPages }, (_, i) => (
+      {filteredAttendance.length > 0 && (
+        <div className="d-flex justify-content-center mt-4 gap-2">
           <button
-            key={i}
-            className={`btn btn-sm ${
-              currentPage === i + 1 ? "btn-primary" : "btn-outline-primary"
-            }`}
-            onClick={() => setCurrentPage(i + 1)}
+            className="btn btn-outline-secondary btn-sm"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
           >
-            {i + 1}
+            Prev
           </button>
-        ))}
 
-        <button
-          className="btn btn-outline-secondary btn-sm"
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage(currentPage + 1)}
-        >
-          Next
-        </button>
-      </div>
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i}
+              className={`btn btn-sm ${
+                currentPage === i + 1 ? "btn-primary" : "btn-outline-primary"
+              }`}
+              onClick={() => setCurrentPage(i + 1)}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            className="btn btn-outline-secondary btn-sm"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

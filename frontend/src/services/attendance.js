@@ -13,6 +13,8 @@ export const getTodayAttendance = () => API.get("/attendance/today");
 export const getMyTodayAttendance = () => API.get("/attendance/meToday");
 
 // get Attendance/month/:month
+export const getMonthlyAttendance = (month) => 
+  API.get(`/attendance/month/${month}`)
 
 // get Attendance/monthlyReport/:month
 export const getMonthlyAttendanceReport = (month) =>
