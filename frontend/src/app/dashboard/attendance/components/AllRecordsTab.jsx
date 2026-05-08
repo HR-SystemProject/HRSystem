@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { getAllAttendance } from "../../../../services/attendance";
+import { getAttendance } from "../../../../services/attendance";
 import { getUsers } from "../../../../services/users";
 
 export default function AllRecordsTab() {
