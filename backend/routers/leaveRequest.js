@@ -8,6 +8,7 @@ const {
   getLeaveRequestsTypes,
   createLeaveRequest,
   updateLeaveRequestsStatus,
+  updatedMyLeaveRequest,
   cancelLeaveRequest,
 } = require("../controllers/leaveRequestController");
 
@@ -29,12 +30,7 @@ leaveRequestRouter.get(
 leaveRequestRouter.get("/my", auth, getEmployeeLeaveRequests);
 
 // get leaveRequests/getLeaveRequestsTypes
-leaveRequestRouter.get(
-  "/LeaveRequestsTypes",
-  auth,
-  authorize(["hr", "admin"]),
-  getLeaveRequestsTypes,
-);
+leaveRequestRouter.get("/LeaveRequestsTypes", auth, getLeaveRequestsTypes);
 
 // create leaveRequest
 leaveRequestRouter.post("/", auth, createLeaveRequest);
@@ -46,6 +42,9 @@ leaveRequestRouter.put(
   authorize(["hr", "admin"]),
   updateLeaveRequestsStatus,
 );
+
+// update leaveRequests/:id
+leaveRequestRouter.put("/:id", auth, updatedMyLeaveRequest);
 
 // cancel leaveRequest/:id
 leaveRequestRouter.delete("/:id", auth, cancelLeaveRequest);
