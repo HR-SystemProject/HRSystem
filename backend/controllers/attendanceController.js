@@ -13,20 +13,19 @@ const getTodayAttendance = async (req, res) => {
 
     const data = await attendanceModel
       .find({
-        date: {
+        createdAt: {
           $gte: startOfDay,
           $lte: endOfDay,
         },
       })
-      .populate("employeeId", "name email")
+      .populate({
+        path: "employeeId",
+        populate: {
+          path: "userId",
+          select: "name email",
+        },
+      })
       .sort({ createdAt: -1 });
-
-    if (!data.length) {
-      return res.status(404).json({
-        success: false,
-        message: "No attendance records for today",
-      });
-    }
 
     const formatted = data.map((item) => {
       let workingTime = "Still working";
@@ -41,7 +40,7 @@ const getTodayAttendance = async (req, res) => {
       }
 
       return {
-        userId: item.employeeId,
+        userId: item.employeeId?.userId,
         checkIn: item.checkIn,
         checkOut: item.checkOut,
         status: item.status,
@@ -67,17 +66,22 @@ const getAttendance = async (req, res) => {
   try {
     const data = await attendanceModel
       .find()
-      .populate("employeeId", "name email")
+      .populate({
+        path: "employeeId",
+        populate: {
+          path: "userId",
+          select: "name email",
+        },
+      })
       .sort({ createdAt: -1 });
 
     const formatted = data.map((item) => {
-      let workingTime = null;
+      let workingTime = "Still working";
 
       if (item.checkIn && item.checkOut) {
-        const diff = item.checkOut - item.checkIn;
+        const diff = new Date(item.checkOut) - new Date(item.checkIn);
 
         const hours = Math.floor(diff / (1000 * 60 * 60));
-
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
         workingTime = `${hours}h ${minutes}m`;
@@ -88,7 +92,7 @@ const getAttendance = async (req, res) => {
         date: item.date,
         checkIn: item.checkIn,
         checkOut: item.checkOut || null,
-        workingTime: workingTime || "Still working",
+        workingTime,
         status: item.status,
       };
     });
@@ -165,22 +169,29 @@ const getEmployeeAttendance = async (req, res) => {
 // get Attendance/month/:month "for each employee"
 const getMonthlyAttendance = async (req, res) => {
   try {
-    const employeeId = req.user.userId;
     const month = Number(req.params.month);
 
-    const result = await attendanceModel
-      .find({
-        employeeId,
-        $expr: {
-          $eq: [{ $month: "$date" }, month],
-        },
-      })
-      .populate("employeeId", "name email");
+    const employee = await employeeModel.findOne({
+      userId: req.user.userId,
+    });
 
-    let totalHours = 0;
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    const result = await attendanceModel.find({
+      employeeId: employee._id,
+      $expr: {
+        $eq: [{ $month: "$date" }, month],
+      },
+    });
+
+    let totalMinutes = 0;
     let absentDays = 0;
     let lateDays = 0;
-    let totalMinutes = 0;
 
     result.forEach((item) => {
       totalMinutes += (item.workingHours || 0) * 60;
@@ -192,25 +203,21 @@ const getMonthlyAttendance = async (req, res) => {
     const hours = Math.floor(totalMinutes / 60);
     const minutes = Math.floor(totalMinutes % 60);
 
+    const totalHours = totalMinutes / 60;
+
     const totalTime = `${hours}h ${minutes}m`;
 
     const records = result.map((item) => {
-      const hoursFloat = item.workingHours || 0;
-
-      const hours = Math.floor(hoursFloat);
-      const minutes = Math.floor((hoursFloat - hours) * 60);
+      const h = Math.floor(item.workingHours || 0);
+      const m = Math.round(((item.workingHours || 0) - h) * 60);
 
       return {
         _id: item._id,
-        employeeId: item.employeeId,
         checkIn: item.checkIn,
         checkOut: item.checkOut,
         status: item.status,
         date: item.date,
-
-        workingTime: `${hours}h ${minutes}m`,
-
-        workingHours: parseFloat(hoursFloat.toFixed(2)),
+        workingTime: `${h}h ${m}m`,
       };
     });
 
@@ -218,7 +225,8 @@ const getMonthlyAttendance = async (req, res) => {
       success: true,
       data: {
         month,
-        totalHours: totalTime,
+        totalHours,
+        totalTime,
         absentDays,
         lateDays,
         records,
@@ -237,12 +245,13 @@ const getMonthlyAttendanceReport = async (req, res) => {
   try {
     const month = Number(req.params.month);
 
+    const start = new Date(new Date().getFullYear(), month - 1, 1);
+    const end = new Date(new Date().getFullYear(), month, 0, 23, 59, 59, 999);
+
     const result = await attendanceModel.aggregate([
       {
         $match: {
-          $expr: {
-            $eq: [{ $month: "$date" }, month],
-          },
+          date: { $gte: start, $lte: end },
         },
       },
 
@@ -250,75 +259,70 @@ const getMonthlyAttendanceReport = async (req, res) => {
         $group: {
           _id: "$employeeId",
 
-          totalHours: {
-            $sum: "$workingHours",
-          },
+          totalHours: { $sum: "$workingHours" },
 
           presentDays: {
-            $sum: {
-              $cond: [{ $eq: ["$status", "present"] }, 1, 0],
-            },
+            $sum: { $cond: [{ $eq: ["$status", "present"] }, 1, 0] },
           },
 
           lateDays: {
-            $sum: {
-              $cond: [{ $eq: ["$status", "late"] }, 1, 0],
-            },
+            $sum: { $cond: [{ $eq: ["$status", "late"] }, 1, 0] },
           },
 
           absentDays: {
-            $sum: {
-              $cond: [{ $eq: ["$status", "absent"] }, 1, 0],
-            },
+            $sum: { $cond: [{ $eq: ["$status", "absent"] }, 1, 0] },
           },
         },
       },
 
       {
         $lookup: {
-          from: "users",
+          from: "employees",
           localField: "_id",
           foreignField: "_id",
           as: "employee",
         },
       },
 
+      { $unwind: "$employee" },
+
       {
-        $unwind: "$employee",
+        $lookup: {
+          from: "users",
+          localField: "employee.userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+
+      { $unwind: "$user" },
+
+      {
+        $project: {
+          _id: 1,
+          totalHours: 1,
+
+          presentDays: 1,
+          lateDays: 1,
+          absentDays: 1,
+
+          employee: {
+            _id: "$employee._id",
+            jobTitle: "$employee.jobTitle",
+          },
+
+          user: {
+            _id: "$user._id",
+            name: "$user.name",
+            email: "$user.email",
+          },
+        },
       },
     ]);
 
-    if (!result.length) {
-      return res.status(404).json({
-        success: false,
-        message: "No attendance records found",
-      });
-    }
-
-    const formatted = result.map((item) => {
-      const hours = Math.floor(item.totalHours);
-      const minutes = Math.round((item.totalHours - hours) * 60);
-
-      const totalWorkingTime = `${hours}h ${minutes}m`;
-
-      return {
-        employee: {
-          _id: item.employee._id,
-          name: item.employee.name,
-          email: item.employee.email,
-        },
-
-        totalWorkingTime,
-        presentDays: item.presentDays,
-        lateDays: item.lateDays,
-        absentDays: item.absentDays,
-      };
-    });
-
     return res.status(200).json({
       success: true,
-      message: "Monthly employees report",
-      data: formatted,
+      data: result,
     });
   } catch (error) {
     return res.status(500).json({
@@ -497,8 +501,6 @@ const getMyTodayAttendance = async (req, res) => {
       });
     }
 
-    const employeeId = employee._id;
-
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -507,11 +509,8 @@ const getMyTodayAttendance = async (req, res) => {
 
     const attendance = await attendanceModel
       .findOne({
-        employeeId,
-        date: {
-          $gte: startOfDay,
-          $lte: endOfDay,
-        },
+        employeeId: employee._id,
+        date: { $gte: startOfDay, $lte: endOfDay },
       })
       .populate({
         path: "employeeId",
@@ -521,9 +520,36 @@ const getMyTodayAttendance = async (req, res) => {
         },
       });
 
+    if (!attendance) {
+      return res.status(200).json({
+        success: true,
+        data: null,
+      });
+    }
+
+    let workingTime = "Still working";
+
+    if (attendance?.checkIn) {
+      const start = new Date(attendance.checkIn);
+      const end = attendance.checkOut
+        ? new Date(attendance.checkOut)
+        : new Date();
+
+      const diff = end - start;
+
+      const totalMinutes = Math.floor(diff / (1000 * 60));
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+
+      workingTime = `${hours}h ${minutes}m`;
+    }
+
     return res.status(200).json({
       success: true,
-      data: attendance || null,
+      data: {
+        ...attendance.toObject(),
+        workingTime,
+      },
     });
   } catch (error) {
     return res.status(500).json({
