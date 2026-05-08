@@ -13,6 +13,7 @@ import {
   getMyTodayAttendance,
   getMonthlyAttendance,
 } from "../../../services/attendance";
+import { getEmployeePayroll } from "../../../services/payroll";
 
 export default function UserDashboardPage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function UserDashboardPage() {
   const [monthly, setMonthly] = useState(null);
 
   const [loading, setLoading] = useState(false);
+  const [payroll, setPayroll] = useState(null);
   const [loadingAtt, setLoadingAtt] = useState(false);
 
   useEffect(() => {
@@ -38,6 +40,7 @@ export default function UserDashboardPage() {
 
     fetchEmployee();
     fetchTodayAttendance();
+    fetchPayroll();
   }, []);
 
   const fetchEmployee = async () => {
@@ -82,6 +85,22 @@ export default function UserDashboardPage() {
   useEffect(() => {
     fetchMonthly();
   }, []);
+
+  const fetchPayroll = async () => {
+    try {
+      const res = await getEmployeePayroll();
+
+      const currentMonth = new Date().toISOString().slice(0, 7);
+
+      const currentPayroll = res.data.data.find(
+        (p) => p.month === currentMonth,
+      );
+
+      setPayroll(currentPayroll || null);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const hasCheckIn = !!todayAttendance?.checkIn;
   const hasCheckOut = !!todayAttendance?.checkOut;
@@ -206,7 +225,7 @@ export default function UserDashboardPage() {
       {/* DASHBOARD CARDS */}
       <div className="row g-4">
         {/* ATTENDANCE */}
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-md-4" style={{ minHeight: "200px" }}>
           <div className="bg-white shadow-sm rounded-4 p-4 text-center h-100">
             <small className="fw-bold d-block mb-3">Attendance</small>
 
@@ -298,17 +317,14 @@ export default function UserDashboardPage() {
         </div>
 
         {/* MONTHLY STATS */}
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-md-4" style={{ minHeight: "200px" }}>
           <div className="bg-white shadow-sm rounded-4 p-4 h-100">
             <small className="fw-bold d-block mb-3">Monthly Stats</small>
 
             <div className="d-flex flex-column gap-3">
               <div className="d-flex justify-content-between">
                 <span className="text-muted">Working Hours</span>
-
-                
-                  {monthlyHours.toFixed(1)}h ({percent.toFixed(0)}%)
-                
+                {monthlyHours.toFixed(1)}h ({percent.toFixed(0)}%)
               </div>
 
               <div className="d-flex justify-content-between">
@@ -329,7 +345,7 @@ export default function UserDashboardPage() {
         </div>
 
         {/* LEAVE REQUESTS */}
-        <div className="col-12 col-md-4">
+        <div className="col-12 col-md-4" style={{ minHeight: "200px" }}>
           <div className="bg-white shadow-sm rounded-4 p-4 h-100">
             <small className="fw-bold d-block mb-3">Leave Requests</small>
 
@@ -355,6 +371,172 @@ export default function UserDashboardPage() {
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* PAYROLL */}
+        <div className="col-12 col-md-4" style={{ minHeight: "200px" }}>
+          <div className="bg-white shadow-sm rounded-4 p-4 h-100">
+            <small className="fw-bold d-block mb-3">This Month Payroll</small>
+
+            {payroll ? (
+              <div className="d-flex flex-column gap-3">
+                <div className="d-flex justify-content-between">
+                  <span className="text-muted">Net Salary</span>
+
+                  <span className="fw-bold text-success">
+                    ${payroll.netSalary}
+                  </span>
+                </div>
+
+                <div className="d-flex justify-content-between">
+                  <span className="text-muted">Bonus</span>
+
+                  <span className="badge bg-success px-3 py-2">
+                    ${payroll.bonus}
+                  </span>
+                </div>
+
+                <div className="d-flex justify-content-between">
+                  <span className="text-muted">Deductions</span>
+
+                  <span className="badge bg-danger px-3 py-2">
+                    ${payroll.deductions}
+                  </span>
+                </div>
+
+                <div className="d-flex justify-content-between">
+                  <span className="text-muted">Status</span>
+
+                  <span
+                    className={`badge px-3 py-2 ${
+                      payroll.status === "paid"
+                        ? "bg-success"
+                        : payroll.status === "pending"
+                          ? "bg-warning text-dark"
+                          : "bg-secondary"
+                    }`}
+                  >
+                    {payroll.status}
+                  </span>
+                </div>
+
+                <div className="d-flex justify-content-between">
+                  <span className="text-muted">Month</span>
+
+                  <span className="fw-semibold">{payroll.month}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-muted text-center py-4">
+                No payroll for this month
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* PRODUCTIVITY */}
+        <div className="col-12 col-md-4" style={{ minHeight: "200px" }}>
+          <div className="bg-white shadow-sm rounded-4 p-4 h-100">
+            <small className="fw-bold d-block mb-4">Monthly Productivity</small>
+
+            <div className="d-flex flex-column align-items-center">
+              {/* CIRCLE */}
+              <div
+                className="rounded-circle d-flex align-items-center justify-content-center mb-3"
+                style={{
+                  width: "170px",
+                  height: "170px",
+                  background: `conic-gradient(
+            #22c55e ${percent}%,
+            #e5e7eb ${percent}%
+          )`,
+                }}
+              >
+                <div
+                  className="bg-white rounded-circle d-flex flex-column align-items-center justify-content-center"
+                  style={{
+                    width: "130px",
+                    height: "130px",
+                  }}
+                >
+                  <h2 className="fw-bold mb-0">{percent.toFixed(0)}%</h2>
+
+                  <small className="text-muted">
+                    {monthlyHours.toFixed(1)}h / 160h
+                  </small>
+                </div>
+              </div>
+
+              {/* STATUS */}
+              <div
+                className="px-4 py-2 rounded-pill fw-semibold"
+                style={{
+                  background:
+                    percent >= 80
+                      ? "#dcfce7"
+                      : percent >= 50
+                        ? "#fef9c3"
+                        : "#fee2e2",
+
+                  color:
+                    percent >= 80
+                      ? "#15803d"
+                      : percent >= 50
+                        ? "#a16207"
+                        : "#dc2626",
+                }}
+              >
+                {percent >= 80
+                  ? "Excellent Attendance"
+                  : percent >= 50
+                    ? "Good Progress"
+                    : "Needs Improvement"}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* MY PROFILE CARD */}
+        <div className="col-12 col-md-4" style={{ minHeight: "200px" }}>
+          <div
+            onClick={() => router.push("/dashboard/myProfile")}
+            className="bg-white shadow-sm rounded-4 p-4 h-100 d-flex flex-column justify-content-between"
+            style={{
+              cursor: "pointer",
+              transition: "0.3s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-5px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0px)";
+            }}
+          >
+            <div>
+              <small className="fw-bold d-block mb-3">My Profile</small>
+
+              <p className="text-muted mb-0" style={{ fontSize: "14px" }}>
+                View your personal information, department, salary details, and
+                account data.
+              </p>
+            </div>
+
+            <div className="text-center mt-4">
+              <img
+                src="/image.png"
+                alt="profile"
+                className="img-fluid"
+                style={{
+                  maxHeight: "160px",
+                  objectFit: "contain",
+                }}
+              />
+            </div>
+
+            <button className="btn btn-dark rounded-pill mt-3">
+              Open Profile
+            </button>
           </div>
         </div>
       </div>
