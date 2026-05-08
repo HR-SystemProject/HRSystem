@@ -4,7 +4,7 @@ import { API } from "./api";
 export const getPayrolls = () => API.get("/payroll");
 
 // GET /payroll/my
-export const getMyPayroll = () => API.get("/payroll/my");
+export const getEmployeePayroll = () => API.get("/payroll/my");
 
 // GET /payroll/employee/:id
 export const getPayrollByEmployee = (id) => API.get(`/payroll/employee/${id}`);
