@@ -43,7 +43,7 @@ export default function Page() {
     const roleName =
       typeof role === "string" ? role : role?.roleName || role?.role?.roleName;
 
-    if (!["admin", "hr"].includes(roleName)) {
+    if (!["admin", "hr", "user"].includes(roleName)) {
       router.replace("/unauthorized");
       return;
     }
@@ -160,9 +160,9 @@ export default function Page() {
       setPasswordLoading(true);
 
       await changePassword({
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword,
-      });
+  oldPassword: passwordData.currentPassword,
+  newPassword: passwordData.newPassword,
+});
 
       setPasswordData({
         currentPassword: "",
@@ -234,7 +234,7 @@ export default function Page() {
               onClick={openEdit}
             >
               <FaEdit className="me-1" />
-              Edit Profile
+              Change name
             </button>
           </div>
         </div>
@@ -258,14 +258,6 @@ export default function Page() {
                 <small className="text-muted d-block">Email</small>
 
                 <span className="fw-semibold">{user?.email || "—"}</span>
-              </div>
-
-              <div className="mb-3">
-                <small className="text-muted d-block">Role</small>
-
-                <span className="badge bg-primary-subtle text-primary text-capitalize">
-                  {user?.role?.roleName || "user"}
-                </span>
               </div>
 
               <div className="mb-3">
@@ -474,25 +466,6 @@ export default function Page() {
                 )}
               </div>
 
-              {/* PROFILE IMAGE */}
-              <div className="mb-3">
-                <label className="form-label fw-semibold">
-                  Profile Image URL
-                </label>
-
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="https://..."
-                  value={formData.profileImage}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      profileImage: e.target.value,
-                    })
-                  }
-                />
-              </div>
 
               {/* ERROR */}
               {apiError && <div className="alert alert-danger">{apiError}</div>}

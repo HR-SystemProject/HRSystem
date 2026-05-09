@@ -42,7 +42,7 @@ useEffect(() => {
     return;
   }
 
-  if (!["admin", "hr"].includes(roleName)) {
+  if (!["admin", "hr" ,"user"].includes(roleName)) {
     router.replace("/unauthorized");
   }
 }, []);
