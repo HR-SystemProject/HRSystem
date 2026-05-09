@@ -252,7 +252,7 @@ export default function DepartmentsPage() {
             Create and manage company departments
           </small>
         </div>
-        {role === "admin" && (
+        {role?.roleName === "admin" && (
           <button
             onClick={openModal}
             className="btn btn-success d-flex align-items-center gap-2"
@@ -365,7 +365,7 @@ export default function DepartmentsPage() {
                       <FaEye />
                     </button>
 
-                    {role === "admin" && (
+                    {role?.roleName === "admin" && (
                       <button
                         className="btn btn-sm btn-outline-warning"
                         onClick={() => handleEditDepartment(dep)}
@@ -374,7 +374,7 @@ export default function DepartmentsPage() {
                       </button>
                     )}
 
-                    {role === "admin" && (
+                    {role?.roleName === "admin" && (
                       <button
                         className="btn btn-sm btn-outline-danger"
                         onClick={() => openDelete(dep._id)}

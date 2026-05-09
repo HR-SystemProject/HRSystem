@@ -46,11 +46,13 @@ export default function MyLeaveRequestsPage() {
 
   useEffect(() => {
     const role = getRole();
+
     const roleName =
       typeof role === "string" ? role : role?.roleName || role?.role?.roleName;
 
-    if (roleName !== "user") {
+    if (!["admin", "hr"].includes(roleName)) {
       router.replace("/unauthorized");
+      return;
     }
   }, [router]);
 

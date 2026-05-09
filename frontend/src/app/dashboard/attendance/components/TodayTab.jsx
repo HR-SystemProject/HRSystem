@@ -97,7 +97,7 @@ export default function AttendancePage() {
 
       <div className="row g-3 mb-4">
         {/* Total */}
-        <div className="col-md-3 ">
+        <div className="col-md-6 ">
           <div
             className="d-flex align-items-center justify-content-between p-3 shadow-sm rounded h-100 border-start border-primary border-4 transition-card"
             style={{ background: "#e8eeff" }}
@@ -112,7 +112,7 @@ export default function AttendancePage() {
         </div>
 
         {/* Present */}
-        <div className="col-md-3">
+        <div className="col-md-6">
           <div
             className="d-flex align-items-center justify-content-between p-3 shadow-sm rounded h-100 border-start border-success border-4 transition-card"
             style={{ background: "#eeffea" }}
@@ -127,7 +127,7 @@ export default function AttendancePage() {
         </div>
 
         {/* Late */}
-        <div className="col-md-3">
+        <div className="col-md-6">
           <div
             className="d-flex align-items-center justify-content-between p-3 shadow-sm rounded h-100 border-start border-warning border-4 transition-card"
             style={{ background: "#fffde6" }}
@@ -142,7 +142,7 @@ export default function AttendancePage() {
         </div>
 
         {/* Absent */}
-        <div className="col-md-3">
+        <div className="col-md-6">
           <div
             className="d-flex align-items-center justify-content-between p-3 shadow-sm rounded h-100 border-start border-danger border-4 transition-card"
             style={{ background: "#ffeded" }}

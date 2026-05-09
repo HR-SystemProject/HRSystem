@@ -24,6 +24,10 @@ export default function Login() {
 
     const roleName = user?.role?.roleName?.toLowerCase();
 
+    const hasEmployee = res.data.user.employeeId ? true : false;
+
+    localStorage.setItem("hasEmployee", JSON.stringify(hasEmployee));
+
     if (roleName === "admin" || roleName === "hr") {
       router.replace("/dashboard/dashboard");
     } else if (roleName === "user") {
@@ -145,6 +149,19 @@ export default function Login() {
               {errors.password}
             </small>
           )}
+          {/* FORGOT PASSWORD */}
+          <div className="text-end my-2">
+            <a
+              href="/auth/forget-password"
+              style={{
+                fontSize: "13px",
+                color: "#71b3f4",
+                textDecoration: "none",
+              }}
+            >
+              Forgot your password?
+            </a>
+          </div>
 
           {/* GENERAL ERROR */}
           {errors.general && (
