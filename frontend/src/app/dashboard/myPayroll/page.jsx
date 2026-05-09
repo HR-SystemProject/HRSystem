@@ -29,21 +29,22 @@ export default function MyPayrollPage() {
 
   const [payrolls, setPayrolls] = useState([]);
   const [loading, setLoading] = useState(true);
-useEffect(() => {
-  const role = getRole();
+  useEffect(() => {
+    const role = getRole();
 
-  const roleName =
-    typeof role === "string"
-      ? role
-      : role?.roleName || role?.role?.roleName;
+    const roleName =
+      typeof role === "string" ? role : role?.roleName || role?.role?.roleName;
 
-  if (!roleName) {
-    router.replace("/unauthorized");
-    return;
-  }
-    router.replace("/unauthorized");
-  }
-}, []);
+    if (!roleName) {
+      router.replace("/unauthorized");
+      return;
+    }
+
+    if (!["admin", "hr", "user"].includes(roleName)) {
+      router.replace("/unauthorized");
+      return;
+    }
+  }, []);
 
   useEffect(() => {
     fetchPayrolls();
@@ -62,12 +63,10 @@ useEffect(() => {
 
   const latestPayroll = payrolls[0];
 
-  const chartData = payrolls
-    .slice()
-    .map((item) => ({
-      month: item.month,
-      salary: item.netSalary,
-    }));
+  const chartData = payrolls.slice().map((item) => ({
+    month: item.month,
+    salary: item.netSalary,
+  }));
 
   if (loading) {
     return (

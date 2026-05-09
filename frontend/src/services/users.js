@@ -29,7 +29,6 @@ export const deleteUser = (id) => {
 
 // CHANGE PASSWORD
 export const changePassword = (data) => {
-  console.log("SENDING FROM FRONT:", data);
 
   return API.post("/users/changePassword", JSON.stringify(data), {
     headers: {
