@@ -4,9 +4,7 @@ const userRouter = express.Router();
 const {
   createUser,
   login,
-  logout,
   updateProfile,
-  forgetPassword,
   changePassword,
   getUsers,
   getUserById,
@@ -24,17 +22,11 @@ userRouter.post("/signup", createUser);
 // Login
 userRouter.post("/login", login);
 
-// LOGOUT
-userRouter.post("/logout", auth, logout);
-
 // Update /:id/profile
 userRouter.put("/:id/profile", auth, updateProfile);
 
 // CHANGE PASSWORD
-userRouter.post("/:id/change-password", auth, changePassword);
-
-// FORGET PASSWORD
-userRouter.post("/forget-password", forgetPassword);
+userRouter.post("/changePassword", auth, changePassword);
 
 // ADMIN ROUTES
 
