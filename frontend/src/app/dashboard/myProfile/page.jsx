@@ -43,13 +43,14 @@ export default function Page() {
     const roleName =
       typeof role === "string" ? role : role?.roleName || role?.role?.roleName;
 
-
+    if (!roleName) {
       router.replace("/unauthorized");
       return;
     }
 
     if (!["admin", "hr", "user"].includes(roleName)) {
       router.replace("/unauthorized");
+      return;
     }
 
     fetchEmployee();
@@ -164,9 +165,9 @@ export default function Page() {
       setPasswordLoading(true);
 
       await changePassword({
-  oldPassword: passwordData.currentPassword,
-  newPassword: passwordData.newPassword,
-});
+        oldPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
 
       setPasswordData({
         currentPassword: "",
@@ -469,7 +470,6 @@ export default function Page() {
                   <small className="text-danger">{errors.name}</small>
                 )}
               </div>
-
 
               {/* ERROR */}
               {apiError && <div className="alert alert-danger">{apiError}</div>}
