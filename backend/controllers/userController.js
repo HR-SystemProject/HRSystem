@@ -158,7 +158,7 @@ const updateProfile = async (req, res) => {
         message: "Forbidden",
       });
     }
-  
+
     const updatedUser = await userModel
       .findByIdAndUpdate(
         userIdFromParams,
@@ -189,6 +189,50 @@ const updateProfile = async (req, res) => {
     });
   }
 };
+
+//update /role/:id
+const updateUserRole = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { role } = req.body;
+
+    const userRole = req.user.role;
+
+    if (userRole !== "admin" && userRole !== "hr") {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    const user = await userModel.findByIdAndUpdate(
+      userId,
+      { role },
+      { new: true }
+    ).populate("role");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Role updated successfully",
+      data: user,
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+module.exports = { updateUserRole };
 
 // FORGET PASSWORD
 const crypto = require("crypto");
@@ -451,4 +495,5 @@ module.exports = {
   getUserById,
   deleteUser,
   updateUser,
+  updateUserRole,
 };

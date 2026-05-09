@@ -12,6 +12,7 @@ const {
   getUserById,
   deleteUser,
   updateUser,
+  updateUserRole,
 } = require("../controllers/userController");
 
 const authorize = require("../middleware/Authorization");
@@ -45,6 +46,9 @@ userRouter.get("/:id", auth, authorize(["admin", "hr"]), getUserById);
 
 // Delete users/:id
 userRouter.delete("/:id", auth, authorize(["admin", "hr"]), deleteUser);
+
+// updateRole
+userRouter.put("/role/:id", auth, authorize(["admin"]), updateUserRole);
 
 // Admin: update user information
 userRouter.put("/:id", auth, authorize(["admin", "hr"]), updateUser);
