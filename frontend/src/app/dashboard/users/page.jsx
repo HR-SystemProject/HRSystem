@@ -1,12 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getUsers, deleteUser, updateUser } from "../../../services/users";
+import {
+  getUsers,
+  deleteUser,
+  updateUser,
+  updateUserRole,
+} from "../../../services/users";
+import { getRoles } from "../../../services/role";
 import { getRole } from "../../../utils/auth";
 import { FaEye, FaTrash } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
 export default function UsersPage() {
   const router = useRouter();
+  const [roles, setRoles] = useState([]);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [search, setSearch] = useState("");
@@ -23,15 +30,25 @@ export default function UsersPage() {
 
   useEffect(() => {
     const role = getRole();
-
-    console.log("ROLE FROM TOKEN:", role);
-
     if (!role || role.roleName?.toLowerCase() !== "admin") {
       router.push("/unauthorized");
       return;
     }
 
     fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const res = await getRoles();
+        setRoles(res.data.data);
+      } catch (err) {
+        console.log("Error fetching roles:", err);
+      }
+    };
+
+    fetchRoles();
   }, []);
 
   useEffect(() => {
@@ -102,6 +119,24 @@ export default function UsersPage() {
       );
     } catch (err) {
       console.log(err);
+    }
+  };
+
+  const handleRoleChange = async (userId, roleId) => {
+    try {
+      const res = await updateUserRole(userId, {
+        role: roleId,
+      });
+
+      const updatedUser = res.data.data;
+
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === userId ? { ...u, role: updatedUser.role } : u,
+        ),
+      );
+    } catch (err) {
+      console.log("Role update error:", err);
     }
   };
 
@@ -203,7 +238,7 @@ export default function UsersPage() {
               <th>Role</th>
               <th>Status</th>
               <th>Permissions</th>
-              <th className="text-end">Actions</th>
+              <th className="text-center">Actions</th>
             </tr>
           </thead>
 
@@ -250,19 +285,38 @@ export default function UsersPage() {
 
                 {/* Actions */}
                 <td className="text-end">
-                  <div className="d-flex justify-content-end gap-2">
+                  <div className="d-flex justify-content-end gap-2 align-items-center">
+                    {/* Role Dropdown */}
+                    <select
+                      className="form-select form-select-sm w-auto"
+                      value={u.role?._id || ""}
+                      onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                    >
+                      <option value="" disabled>
+                        Select Role
+                      </option>
+
+                      {roles.map((r) => (
+                        <option key={r._id} value={r._id}>
+                          {r.roleName}
+                        </option>
+                      ))}
+                    </select>
+                    
+                    {/* View */}
                     <button
                       className="btn btn-sm btn-outline-primary"
                       onClick={() => setSelectedUser(u)}
                     >
-                      <FaEye /> View
+                      <FaEye />
                     </button>
 
+                    {/* Delete */}
                     <button
                       className="btn btn-sm btn-outline-danger"
                       onClick={() => setDeleteId(u._id)}
                     >
-                      <FaTrash /> Delete
+                      <FaTrash />
                     </button>
                   </div>
                 </td>

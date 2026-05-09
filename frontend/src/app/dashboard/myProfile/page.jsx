@@ -4,17 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getRole, getUser, getUserId } from "@/utils/auth";
 import { getMyEmployee } from "@/services/employees";
-import {
-  updateProfile,
-  changePassword,
-} from "@/services/users";
+import { updateProfile, changePassword } from "@/services/users";
 
-import {
-  FaUserCircle,
-  FaEdit,
-  FaSave,
-  FaTimes,
-} from "react-icons/fa";
+import { FaUserCircle, FaEdit, FaSave, FaTimes } from "react-icons/fa";
 
 import Swal from "sweetalert2";
 
@@ -49,17 +41,15 @@ export default function Page() {
     const role = getRole();
 
     const roleName =
-      typeof role === "string"
-        ? role
-        : role?.roleName || role?.role?.roleName;
+      typeof role === "string" ? role : role?.roleName || role?.role?.roleName;
 
-    if (roleName !== "user") {
+    if (!["admin", "hr"].includes(roleName)) {
       router.replace("/unauthorized");
       return;
     }
 
     fetchEmployee();
-  }, [router]);
+  }, []);
 
   const fetchEmployee = async () => {
     try {
@@ -125,24 +115,15 @@ export default function Page() {
         ...res.data.data,
       };
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify(updatedUser)
-      );
+      localStorage.setItem("user", JSON.stringify(updatedUser));
 
       closeEdit();
 
       await fetchEmployee();
 
-      Swal.fire(
-        "Success",
-        "Profile updated successfully",
-        "success"
-      );
+      Swal.fire("Success", "Profile updated successfully", "success");
     } catch (err) {
-      setApiError(
-        err.response?.data?.message || "Error occurred"
-      );
+      setApiError(err.response?.data?.message || "Error occurred");
     } finally {
       setSaving(false);
     }
@@ -153,24 +134,17 @@ export default function Page() {
     const newErrors = {};
 
     if (!passwordData.currentPassword) {
-      newErrors.currentPassword =
-        "Current password is required";
+      newErrors.currentPassword = "Current password is required";
     }
 
     if (!passwordData.newPassword) {
-      newErrors.newPassword =
-        "New password is required";
+      newErrors.newPassword = "New password is required";
     } else if (passwordData.newPassword.length < 8) {
-      newErrors.newPassword =
-        "Password must be at least 8 characters";
+      newErrors.newPassword = "Password must be at least 8 characters";
     }
 
-    if (
-      passwordData.confirmPassword !==
-      passwordData.newPassword
-    ) {
-      newErrors.confirmPassword =
-        "Passwords do not match";
+    if (passwordData.confirmPassword !== passwordData.newPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     setPasswordErrors(newErrors);
@@ -186,8 +160,7 @@ export default function Page() {
       setPasswordLoading(true);
 
       await changePassword({
-        currentPassword:
-          passwordData.currentPassword,
+        currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });
 
@@ -197,17 +170,12 @@ export default function Page() {
         confirmPassword: "",
       });
 
-      Swal.fire(
-        "Success",
-        "Password changed successfully",
-        "success"
-      );
+      Swal.fire("Success", "Password changed successfully", "success");
     } catch (err) {
       Swal.fire(
         "Error",
-        err.response?.data?.message ||
-          "Failed to change password",
-        "error"
+        err.response?.data?.message || "Failed to change password",
+        "error",
       );
     } finally {
       setPasswordLoading(false);
@@ -215,11 +183,7 @@ export default function Page() {
   };
 
   if (loading) {
-    return (
-      <p className="text-center mt-5">
-        Loading...
-      </p>
-    );
+    return <p className="text-center mt-5">Loading...</p>;
   }
 
   const user = getUser();
@@ -231,8 +195,7 @@ export default function Page() {
         <div
           className="rounded-top-4"
           style={{
-            background:
-              "linear-gradient(135deg, #dbeafe, #93c5fd)",
+            background: "linear-gradient(135deg, #dbeafe, #93c5fd)",
             height: "100px",
           }}
         />
@@ -253,16 +216,11 @@ export default function Page() {
                   flexShrink: 0,
                 }}
               >
-                <FaUserCircle
-                  size={50}
-                  color="#1d4ed8"
-                />
+                <FaUserCircle size={50} color="#1d4ed8" />
               </div>
 
               <div className="mt-3">
-                <h4 className="fw-bold mb-0">
-                  {user?.name}
-                </h4>
+                <h4 className="fw-bold mb-0">{user?.name}</h4>
 
                 <small className="text-muted">
                   {employee?.jobTitle || "—"}
@@ -288,34 +246,22 @@ export default function Page() {
         <div className="col-md-6">
           <div className="card border-0 shadow-sm rounded-4 h-100">
             <div className="card-body p-4">
-              <h5 className="fw-bold mb-4">
-                Account Information
-              </h5>
+              <h5 className="fw-bold mb-4">Account Information</h5>
 
               <div className="mb-3">
-                <small className="text-muted d-block">
-                  Full Name
-                </small>
+                <small className="text-muted d-block">Full Name</small>
 
-                <span className="fw-semibold">
-                  {user?.name || "—"}
-                </span>
+                <span className="fw-semibold">{user?.name || "—"}</span>
               </div>
 
               <div className="mb-3">
-                <small className="text-muted d-block">
-                  Email
-                </small>
+                <small className="text-muted d-block">Email</small>
 
-                <span className="fw-semibold">
-                  {user?.email || "—"}
-                </span>
+                <span className="fw-semibold">{user?.email || "—"}</span>
               </div>
 
               <div className="mb-3">
-                <small className="text-muted d-block">
-                  Role
-                </small>
+                <small className="text-muted d-block">Role</small>
 
                 <span className="badge bg-primary-subtle text-primary text-capitalize">
                   {user?.role?.roleName || "user"}
@@ -323,9 +269,7 @@ export default function Page() {
               </div>
 
               <div className="mb-3">
-                <small className="text-muted d-block">
-                  Status
-                </small>
+                <small className="text-muted d-block">Status</small>
 
                 <span
                   className={`badge ${
@@ -334,9 +278,7 @@ export default function Page() {
                       : "bg-danger-subtle text-danger"
                   }`}
                 >
-                  {user?.isActive
-                    ? "Active"
-                    : "Inactive"}
+                  {user?.isActive ? "Active" : "Inactive"}
                 </span>
               </div>
             </div>
@@ -347,20 +289,14 @@ export default function Page() {
         <div className="col-md-6">
           <div className="card border-0 shadow-sm rounded-4 h-100">
             <div className="card-body p-4">
-              <h5 className="fw-bold mb-4">
-                Employment Details
-              </h5>
+              <h5 className="fw-bold mb-4">Employment Details</h5>
 
               {!employee ? (
-                <p className="text-muted">
-                  No employee record found.
-                </p>
+                <p className="text-muted">No employee record found.</p>
               ) : (
                 <>
                   <div className="mb-3">
-                    <small className="text-muted d-block">
-                      Job Title
-                    </small>
+                    <small className="text-muted d-block">Job Title</small>
 
                     <span className="fw-semibold">
                       {employee.jobTitle || "—"}
@@ -368,30 +304,21 @@ export default function Page() {
                   </div>
 
                   <div className="mb-3">
-                    <small className="text-muted d-block">
-                      Department
-                    </small>
+                    <small className="text-muted d-block">Department</small>
 
                     <span className="fw-semibold">
-                      {employee.departmentId?.name ||
-                        "—"}
+                      {employee.departmentId?.name || "—"}
                     </span>
                   </div>
 
                   <div className="mb-3">
-                    <small className="text-muted d-block">
-                      Phone
-                    </small>
+                    <small className="text-muted d-block">Phone</small>
 
-                    <span className="fw-semibold">
-                      {employee.phone || "—"}
-                    </span>
+                    <span className="fw-semibold">{employee.phone || "—"}</span>
                   </div>
 
                   <div className="mb-3">
-                    <small className="text-muted d-block">
-                      Address
-                    </small>
+                    <small className="text-muted d-block">Address</small>
 
                     <span className="fw-semibold">
                       {employee.address || "—"}
@@ -399,15 +326,11 @@ export default function Page() {
                   </div>
 
                   <div className="mb-3">
-                    <small className="text-muted d-block">
-                      Hire Date
-                    </small>
+                    <small className="text-muted d-block">Hire Date</small>
 
                     <span className="fw-semibold">
                       {employee.hireDate
-                        ? new Date(
-                            employee.hireDate
-                          ).toLocaleDateString()
+                        ? new Date(employee.hireDate).toLocaleDateString()
                         : "—"}
                     </span>
                   </div>
@@ -421,9 +344,7 @@ export default function Page() {
         <div className="col-12">
           <div className="card border-0 shadow-sm rounded-4">
             <div className="card-body p-4">
-              <h5 className="fw-bold mb-4">
-                Change Password
-              </h5>
+              <h5 className="fw-bold mb-4">Change Password</h5>
 
               <div className="row g-3">
                 {/* CURRENT PASSWORD */}
@@ -435,50 +356,38 @@ export default function Page() {
                   <input
                     type="password"
                     className={`form-control ${
-                      passwordErrors.currentPassword
-                        ? "is-invalid"
-                        : ""
+                      passwordErrors.currentPassword ? "is-invalid" : ""
                     }`}
-                    value={
-                      passwordData.currentPassword
-                    }
+                    value={passwordData.currentPassword}
                     onChange={(e) =>
                       setPasswordData({
                         ...passwordData,
-                        currentPassword:
-                          e.target.value,
+                        currentPassword: e.target.value,
                       })
                     }
                   />
 
                   {passwordErrors.currentPassword && (
                     <small className="text-danger">
-                      {
-                        passwordErrors.currentPassword
-                      }
+                      {passwordErrors.currentPassword}
                     </small>
                   )}
                 </div>
 
                 {/* NEW PASSWORD */}
                 <div className="col-md-4">
-                  <label className="form-label fw-semibold">
-                    New Password
-                  </label>
+                  <label className="form-label fw-semibold">New Password</label>
 
                   <input
                     type="password"
                     className={`form-control ${
-                      passwordErrors.newPassword
-                        ? "is-invalid"
-                        : ""
+                      passwordErrors.newPassword ? "is-invalid" : ""
                     }`}
                     value={passwordData.newPassword}
                     onChange={(e) =>
                       setPasswordData({
                         ...passwordData,
-                        newPassword:
-                          e.target.value,
+                        newPassword: e.target.value,
                       })
                     }
                   />
@@ -499,27 +408,20 @@ export default function Page() {
                   <input
                     type="password"
                     className={`form-control ${
-                      passwordErrors.confirmPassword
-                        ? "is-invalid"
-                        : ""
+                      passwordErrors.confirmPassword ? "is-invalid" : ""
                     }`}
-                    value={
-                      passwordData.confirmPassword
-                    }
+                    value={passwordData.confirmPassword}
                     onChange={(e) =>
                       setPasswordData({
                         ...passwordData,
-                        confirmPassword:
-                          e.target.value,
+                        confirmPassword: e.target.value,
                       })
                     }
                   />
 
                   {passwordErrors.confirmPassword && (
                     <small className="text-danger">
-                      {
-                        passwordErrors.confirmPassword
-                      }
+                      {passwordErrors.confirmPassword}
                     </small>
                   )}
                 </div>
@@ -531,9 +433,7 @@ export default function Page() {
                   onClick={handleChangePassword}
                   disabled={passwordLoading}
                 >
-                  {passwordLoading
-                    ? "Changing..."
-                    : "Change Password"}
+                  {passwordLoading ? "Changing..." : "Change Password"}
                 </button>
               </div>
             </div>
@@ -548,29 +448,18 @@ export default function Page() {
             <div className="modal-content p-4 border-0 shadow">
               {/* HEADER */}
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5 className="m-0 fw-bold">
-                  Edit Profile
-                </h5>
+                <h5 className="m-0 fw-bold">Edit Profile</h5>
 
-                <button
-                  className="btn-close"
-                  onClick={closeEdit}
-                />
+                <button className="btn-close" onClick={closeEdit} />
               </div>
 
               {/* NAME */}
               <div className="mb-3">
-                <label className="form-label fw-semibold">
-                  Full Name
-                </label>
+                <label className="form-label fw-semibold">Full Name</label>
 
                 <input
                   type="text"
-                  className={`form-control ${
-                    errors.name
-                      ? "is-invalid"
-                      : ""
-                  }`}
+                  className={`form-control ${errors.name ? "is-invalid" : ""}`}
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({
@@ -581,9 +470,7 @@ export default function Page() {
                 />
 
                 {errors.name && (
-                  <small className="text-danger">
-                    {errors.name}
-                  </small>
+                  <small className="text-danger">{errors.name}</small>
                 )}
               </div>
 
@@ -601,26 +488,18 @@ export default function Page() {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      profileImage:
-                        e.target.value,
+                      profileImage: e.target.value,
                     })
                   }
                 />
               </div>
 
               {/* ERROR */}
-              {apiError && (
-                <div className="alert alert-danger">
-                  {apiError}
-                </div>
-              )}
+              {apiError && <div className="alert alert-danger">{apiError}</div>}
 
               {/* BUTTONS */}
               <div className="d-flex justify-content-end gap-2 mt-3">
-                <button
-                  className="btn btn-secondary"
-                  onClick={closeEdit}
-                >
+                <button className="btn btn-secondary" onClick={closeEdit}>
                   <FaTimes className="me-1" />
                   Cancel
                 </button>
@@ -632,9 +511,7 @@ export default function Page() {
                 >
                   <FaSave className="me-1" />
 
-                  {saving
-                    ? "Saving..."
-                    : "Save Changes"}
+                  {saving ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </div>

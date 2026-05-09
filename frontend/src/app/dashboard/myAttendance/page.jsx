@@ -27,8 +27,9 @@ export default function MyAttendancePage() {
     const roleName =
       typeof role === "string" ? role : role?.roleName || role?.role?.roleName;
 
-    if (roleName !== "user") {
+    if (!["admin", "hr"].includes(roleName)) {
       router.replace("/unauthorized");
+      return;
     }
   }, [router]);
 
@@ -151,7 +152,7 @@ export default function MyAttendancePage() {
           <div className="d-flex gap-3 mb-3">
             <div className="p-3 bg-success-subtle rounded-3 flex-fill">
               <div className="text-success fw-bold">Total Hours</div>
-              <div >{Number(monthly.totalHours || 0).toFixed(1)} h</div>
+              <div>{Number(monthly.totalHours || 0).toFixed(1)} h</div>
             </div>
 
             <div className="p-3 bg-warning-subtle rounded-3 flex-fill">

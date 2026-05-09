@@ -186,7 +186,7 @@ export default function RolesPage() {
 
   return (
     <div className="container py-5">
-      <div className="d-flex justify-content-between align-items-center mb-3">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-3">
         <div>
           <h3 className="fw-bold m-0">🛡️ Roles Management</h3>
           <small className="text-muted">

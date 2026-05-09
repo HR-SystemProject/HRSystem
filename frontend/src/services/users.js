@@ -58,6 +58,10 @@ export const updateUser = (id, data) => {
   return API.put(`/users/${id}`, data);
 };
 
+// update user Role
+export const updateUserRole = (id, data) => {
+  return API.put(`/users/role/${id}`, data);
+};
 
 // import axios from "axios";
 

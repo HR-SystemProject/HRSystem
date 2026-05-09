@@ -365,26 +365,28 @@ export default function EmployeesPage() {
                 </td>
                 {/* ACTIONS */}
                 <td className="text-end">
-                  <button
-                    className="btn btn-sm btn-outline-primary me-2"
-                    onClick={() => setSelectedEmployee(emp)}
-                  >
-                    <FaEye size={13} /> View
-                  </button>
+                  <div className="d-flex justify-content-center gap-2">
+                    <button
+                      className="btn btn-sm btn-outline-primary me-2 w-25"
+                      onClick={() => setSelectedEmployee(emp)}
+                    >
+                      <FaEye size={13} /> 
+                    </button>
 
-                  <button
-                    className="btn btn-sm btn-outline-warning me-2"
-                    onClick={() => setEditEmployee(emp)}
-                  >
-                    <FaEdit size={13} /> Edit
-                  </button>
+                    <button
+                      className="btn btn-sm  w-25 btn-outline-warning me-2"
+                      onClick={() => setEditEmployee(emp)}
+                    >
+                      <FaEdit size={13} /> 
+                    </button>
 
-                  <button
-                    className="btn btn-sm btn-outline-danger"
-                    onClick={() => setDeleteId(emp._id)}
-                  >
-                    <FaTrash size={13} /> Delete
-                  </button>
+                    <button
+                      className="btn btn-sm  w-25 btn-outline-danger"
+                      onClick={() => setDeleteId(emp._id)}
+                    >
+                      <FaTrash size={13} /> 
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -439,9 +439,10 @@ export default function AdminDashboard() {
       </div>
 
       {/* Charts Row */}
-      <div className="row g-4">
+      <div className="row g-4 justify-content-center">
+
         {/* Attendance */}
-        <div className="col-md-6">
+        <div className="col-12 col-md-12 col-lg-8">
           <div className="shadow-sm p-4 rounded bg-white h-100">
             <h6 className="fw-semibold">Monthly Attendance Distribution</h6>
             <p className="text-muted mb-3" style={{ fontSize: "12px" }}>
@@ -509,7 +510,7 @@ export default function AdminDashboard() {
         <div className="row g-3">
           {/* Employees */}
           {roleName === "admin" && (
-            <div className="col-md-2">
+            <div className="col-6 col-md-4 col-lg-2">
               <div
                 onClick={() => router.push("/dashboard/employees")}
                 className="p-3 text-center shadow-sm rounded quick-card"
@@ -525,7 +526,7 @@ export default function AdminDashboard() {
           )}
 
           {/* Departments */}
-          <div className="col-md-2">
+          <div className="col-6 col-md-4 col-lg-2">
             <div
               onClick={() => router.push("/dashboard/departments")}
               className="p-3 text-center shadow-sm rounded quick-card"
@@ -540,7 +541,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Users */}
-          <div className="col-md-2">
+          <div className="col-6 col-md-4 col-lg-2">
             <div
               onClick={() => router.push("/dashboard/users")}
               className="p-3 text-center shadow-sm rounded quick-card"
@@ -555,7 +556,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Attendance */}
-          <div className="col-md-2">
+          <div className="col-6 col-md-4 col-lg-2">
             <div
               onClick={() => router.push("/dashboard/attendance")}
               className="p-3 text-center shadow-sm rounded quick-card"
@@ -570,7 +571,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Leaves */}
-          <div className="col-md-2">
+          <div className="col-6 col-md-4 col-lg-2">
             <div
               onClick={() => router.push("/dashboard/leaveRequests")}
               className="p-3 text-center shadow-sm rounded quick-card"
@@ -585,7 +586,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Payroll 💰 */}
-          <div className="col-md-2">
+          <div className="col-6 col-md-4 col-lg-2">
             <div
               onClick={() => router.push("/dashboard/payroll")}
               className="p-3 text-center shadow-sm rounded quick-card"

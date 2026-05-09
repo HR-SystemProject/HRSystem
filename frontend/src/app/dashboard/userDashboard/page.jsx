@@ -33,25 +33,45 @@ export default function UserDashboardPage() {
     const roleName =
       typeof role === "string" ? role : role?.roleName || role?.role?.roleName;
 
-    if (roleName !== "user") {
+    if (!["user", "admin", "hr"].includes(roleName)) {
       router.replace("/unauthorized");
       return;
     }
 
-    fetchEmployee();
+    const hasEmployee = JSON.parse(localStorage.getItem("hasEmployee"));
+
     fetchTodayAttendance();
-    fetchPayroll();
+
+    fetchMonthly();
+
+    if (hasEmployee || roleName === "user") {
+      fetchEmployee();
+      fetchPayroll();
+    }
   }, []);
 
   const fetchEmployee = async () => {
+    const hasEmployee = JSON.parse(localStorage.getItem("hasEmployee"));
+
+    if (!hasEmployee) {
+      setEmployee(null);
+      return;
+    }
+
     try {
       setLoading(true);
 
       const res = await getMyEmployee();
 
-      setEmployee(res.data.data);
+      setEmployee(res.data.data || null);
     } catch (err) {
-      console.log(err);
+      if (err.response?.status === 404) {
+        setEmployee(null);
+        return;
+      }
+
+      console.log("Employee error:", err);
+      setEmployee(null);
     } finally {
       setLoading(false);
     }
@@ -62,7 +82,12 @@ export default function UserDashboardPage() {
       const res = await getMyTodayAttendance();
       setTodayAttendance(res.data.data || null);
     } catch (err) {
-      console.log(err);
+      if (err.response?.status === 404) {
+        setTodayAttendance(null);
+        return;
+      }
+
+      console.log("Attendance error:", err);
       setTodayAttendance(null);
     }
   };
@@ -77,14 +102,21 @@ export default function UserDashboardPage() {
   }, []);
 
   const fetchMonthly = async () => {
-    const month = new Date().getMonth() + 1;
-    const res = await getMonthlyAttendance(month);
-    setMonthly(res.data.data);
-  };
+    try {
+      const month = new Date().getMonth() + 1;
+      const res = await getMonthlyAttendance(month);
 
-  useEffect(() => {
-    fetchMonthly();
-  }, []);
+      setMonthly(res.data.data || null);
+    } catch (err) {
+      if (err.response?.status === 404) {
+        setMonthly(null);
+        return;
+      }
+
+      console.log("Monthly error:", err);
+      setMonthly(null);
+    }
+  };
 
   const fetchPayroll = async () => {
     try {
@@ -92,13 +124,19 @@ export default function UserDashboardPage() {
 
       const currentMonth = new Date().toISOString().slice(0, 7);
 
-      const currentPayroll = res.data.data.find(
-        (p) => p.month === currentMonth,
-      );
+      const payrolls = res.data.data || [];
+
+      const currentPayroll = payrolls.find((p) => p.month === currentMonth);
 
       setPayroll(currentPayroll || null);
     } catch (err) {
-      console.log(err);
+      if (err.response?.status === 404) {
+        setPayroll(null);
+        return;
+      }
+
+      console.log("Payroll error:", err);
+      setPayroll(null);
     }
   };
 

@@ -595,7 +595,7 @@ export default function Page() {
                       onClick={() => setSelectedPayroll(payroll)}
                       className="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 px-2"
                     >
-                      <FaEye size={13} /> View
+                      <FaEye size={13} />
                     </button>
 
                     {/* {isAdminOrHR && ( */}
@@ -607,7 +607,7 @@ export default function Page() {
                           payroll.status === "paid" ? "opacity-50" : ""
                         }`}
                       >
-                        <FaEdit size={13} /> Edit
+                        <FaEdit size={13} />
                       </button>
                     </>
                     {/* )} */}
