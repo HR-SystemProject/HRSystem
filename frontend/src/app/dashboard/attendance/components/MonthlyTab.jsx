@@ -28,7 +28,6 @@ export default function MonthlyTab() {
     "December",
   ];
 
-  // fetch
   const fetchReport = async () => {
     try {
       setLoading(true);
@@ -100,7 +99,7 @@ export default function MonthlyTab() {
 
           <input
             className="form-control w-25"
-            placeholder="Search employee..."
+            placeholder="Search ..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />

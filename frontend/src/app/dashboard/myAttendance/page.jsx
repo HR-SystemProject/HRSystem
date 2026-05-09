@@ -27,13 +27,16 @@ export default function MyAttendancePage() {
     const roleName =
       typeof role === "string" ? role : role?.roleName || role?.role?.roleName;
 
-    if (!["admin", "hr"].includes(roleName)) {
+    if (!roleName) {
       router.replace("/unauthorized");
       return;
     }
+
+    if (!["admin", "hr", "user"].includes(roleName)) {
+      router.replace("/unauthorized");
+    }
   }, [router]);
 
-  // today attendance
   const fetchAttendance = async () => {
     try {
       const res = await getMyTodayAttendance();
@@ -50,7 +53,6 @@ export default function MyAttendancePage() {
     fetchAttendance();
   }, []);
 
-  // monthly attendance
   const fetchMonthly = async (m) => {
     try {
       setLoadingMonth(true);
