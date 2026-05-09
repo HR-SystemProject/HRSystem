@@ -149,19 +149,6 @@ export default function Login() {
               {errors.password}
             </small>
           )}
-          {/* FORGOT PASSWORD */}
-          <div className="text-end my-2">
-            <a
-              href="/auth/forget-password"
-              style={{
-                fontSize: "13px",
-                color: "#71b3f4",
-                textDecoration: "none",
-              }}
-            >
-              Forgot your password?
-            </a>
-          </div>
 
           {/* GENERAL ERROR */}
           {errors.general && (
