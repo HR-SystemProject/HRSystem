@@ -26,15 +26,18 @@ export const deleteUser = (id) => {
 
 /* PASSWORD */
 
-// FORGET PASSWORD
-export const forgetPassword = (data) => {
-  return API.post("/users/forget-password", data);
-};
 
 // CHANGE PASSWORD
 export const changePassword = (data) => {
-  return API.post("/users/change-password", data);
+  console.log("SENDING FROM FRONT:", data);
+
+  return API.post("/users/changePassword", JSON.stringify(data), {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 };
+
 
 /* PROFILE */
 

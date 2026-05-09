@@ -27,7 +27,6 @@ export default function MyAttendancePage() {
     const roleName =
       typeof role === "string" ? role : role?.roleName || role?.role?.roleName;
 
-    if (!roleName) {
       router.replace("/unauthorized");
       return;
     }
