@@ -50,9 +50,12 @@ export default function MyLeaveRequestsPage() {
     const roleName =
       typeof role === "string" ? role : role?.roleName || role?.role?.roleName;
 
-    if (!["admin", "hr","user"].includes(roleName)) {
       router.replace("/unauthorized");
       return;
+    }
+
+    if (!["admin", "hr", "user"].includes(roleName)) {
+      router.replace("/unauthorized");
     }
   }, [router]);
 

@@ -3,14 +3,12 @@ import Link from "next/link";
 
 export default function Sidebar({ role }) {
   const menu = [
-    // ===== COMMON (all roles) =====
     { name: "Dashboard", path: "/dashboard/dashboard", roles: ["admin", "hr"] },
+    { name: "Dashboard", path: "/dashboard/userDashboard", roles: ["user"] },
 
-    // ===== ADMIN ONLY =====
     { name: "Roles", path: "/dashboard/roles", roles: ["admin"] },
     { name: "Users", path: "/dashboard/users", roles: ["admin"] },
 
-    // ===== HR + ADMIN =====
     { name: "Employees", path: "/dashboard/employees", roles: ["admin", "hr"] },
     {
       name: "Departments",
@@ -29,7 +27,6 @@ export default function Sidebar({ role }) {
     },
     { name: "Payroll", path: "/dashboard/payroll", roles: ["admin", "hr"] },
 
-    // ===== USER SECTION =====
     {
       name: "My Profile",
       path: "/dashboard/myProfile",
@@ -51,36 +48,7 @@ export default function Sidebar({ role }) {
       roles: ["admin", "hr", "user"],
     },
   ];
-  // const menu = {
-  //   admin: [
-  //     { name: "Dashboard", path: "/dashboard/dashboard" },
-  //     { name: "Roles", path: "/dashboard/roles" },
-  //     { name: "Users", path: "/dashboard/users" },
-  //     { name: "Employees", path: "/dashboard/employees" },
-  //     { name: "Departments", path: "/dashboard/departments" },
-  //     { name: "Attendance", path: "/dashboard/attendance" },
-  //     { name: "Leave Requests", path: "/dashboard/leaveRequests" },
-  //     { name: "Payroll", path: "/dashboard/payroll" },
-  //   ],
 
-  //   hr: [
-  //     { name: "Dashboard", path: "/dashboard/dashboard" },
-  //     { name: "Employees", path: "/dashboard/employees" },
-  //     { name: "Departments", path: "/dashboard/departments" },
-  //     { name: "Attendance", path: "/dashboard/attendance" },
-  //     { name: "Leave Requests", path: "/dashboard/leaveRequests" },
-  //     { name: "Payroll", path: "/dashboard/payroll" },
-  //   ],
-
-  //   user: [
-  //     { name: "Dashboard", path: "/dashboard/userDashboard" },
-  //     { name: "My Profile", path: "/dashboard/myProfile" },
-  //     { name: "My Attendance", path: "/dashboard/myAttendance" },
-  //     { name: "My Leave Requests", path: "/dashboard/myLeaveRequests" },
-  //     { name: "My Payroll", path: "/dashboard/myPayroll" },
-  //   ],
-  // };
-  // const items = menu[role] || [];
   const items = menu.filter((item) => item.roles.includes(role));
 
   return (

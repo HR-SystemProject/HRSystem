@@ -266,7 +266,6 @@ export default function AdminDashboard() {
     },
   ];
 
-  // Employees per department
   const departmentChartData = departments.map((dep) => {
     const count = employees.filter(
       (emp) => emp.departmentId?._id === dep._id,
@@ -440,7 +439,6 @@ export default function AdminDashboard() {
 
       {/* Charts Row */}
       <div className="row g-4 justify-content-center">
-
         {/* Attendance */}
         <div className="col-12 col-md-12 col-lg-6">
           <div className="shadow-sm p-4 rounded bg-white h-100">
@@ -541,19 +539,21 @@ export default function AdminDashboard() {
           </div>
 
           {/* Users */}
-          <div className="col-6 col-md-4 col-lg-2">
-            <div
-              onClick={() => router.push("/dashboard/users")}
-              className="p-3 text-center shadow-sm rounded quick-card"
-              style={{
-                cursor: "pointer",
-                background: "linear-gradient(135deg,#ffe3f0,#ffb3d9)",
-              }}
-            >
-              <FaUsers size={22} />
-              <div className="mt-2 fw-semibold">Add new Users</div>
+          {role?.roleName === "admin" && (
+            <div className="col-6 col-md-4 col-lg-2">
+              <div
+                onClick={() => router.push("/dashboard/users")}
+                className="p-3 text-center shadow-sm rounded quick-card"
+                style={{
+                  cursor: "pointer",
+                  background: "linear-gradient(135deg,#ffe3f0,#ffb3d9)",
+                }}
+              >
+                <FaUsers size={22} />
+                <div className="mt-2 fw-semibold">Add new Users</div>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Attendance */}
           <div className="col-6 col-md-4 col-lg-2">

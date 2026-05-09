@@ -206,7 +206,7 @@ export default function RolesPage() {
       <div className="d-flex gap-2 mb-3 justify-content-center">
         <input
           className="form-control w-25"
-          placeholder="Search by role name..."
+          placeholder="Search ..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />

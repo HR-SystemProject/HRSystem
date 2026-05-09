@@ -190,7 +190,7 @@ export default function UsersPage() {
         {/* Search */}
         <input
           className="form-control w-25"
-          placeholder="Search name or email..."
+          placeholder="Search ..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
