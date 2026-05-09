@@ -43,37 +43,19 @@ export default function UserDashboardPage() {
     fetchTodayAttendance();
 
     fetchMonthly();
-
-    if (hasEmployee || roleName === "user") {
-      fetchEmployee();
-      fetchPayroll();
-    }
+    fetchEmployee();
+    fetchPayroll();
   }, []);
 
   const fetchEmployee = async () => {
-    const hasEmployee = JSON.parse(localStorage.getItem("hasEmployee"));
-
-    if (!hasEmployee) {
-      setEmployee(null);
-      return;
-    }
-
     try {
-      setLoading(true);
-
       const res = await getMyEmployee();
 
-      setEmployee(res.data.data || null);
+      setEmployee(res?.data?.data ?? null);
     } catch (err) {
-      if (err.response?.status === 404) {
-        setEmployee(null);
-        return;
-      }
+      console.log("❌ ERROR FETCH EMPLOYEE:", err?.response || err);
 
-      console.log("Employee error:", err);
       setEmployee(null);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -206,6 +188,8 @@ export default function UserDashboardPage() {
       setLoadingAtt(false);
     }
   };
+
+
 
   if (loading || !employee) {
     return <p className="text-center mt-5">Loading...</p>;

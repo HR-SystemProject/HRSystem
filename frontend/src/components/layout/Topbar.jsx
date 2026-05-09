@@ -1,48 +1,67 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { getRole } from "@/utils/auth";
-import { FaUserCircle, FaSignOutAlt } from "react-icons/fa";
+import { FaSignOutAlt } from "react-icons/fa";
 
 export default function Topbar({ user }) {
   const router = useRouter();
+  const pathname = usePathname();
 
-  const toggleDashboard = () => {
+  const [roleName, setRoleName] = useState(null);
+
+  // get role once
+  useEffect(() => {
     const role = getRole();
 
-    const roleName =
+    const name =
       typeof role === "string" ? role : role?.roleName || role?.role?.roleName;
 
-    if (!["admin", "hr"].includes(roleName)) return;
+    setRoleName(name?.toLowerCase()?.trim());
+  }, []);
 
-    const isAdminDashboard = window.location.pathname.includes(
-      "dashboard/dashboard",
-    );
+  // switch dashboard
+  const toggleDashboard = () => {
+  const role = getRole();
+  
 
-    if (isAdminDashboard) {
-      router.push("/dashboard/userDashboard");
-    } else {
-      router.push("/dashboard/dashboard");
-    }
-  };
+  const roleName =
+    typeof role === "string"
+      ? role
+      : role?.roleName || role?.role?.roleName;
 
+  const cleanRole = roleName?.toLowerCase()?.trim();
+
+  if (!cleanRole || !["admin", "hr"].includes(cleanRole)) return;
+
+  const isAdminDashboard = pathname.includes("dashboard/dashboard");
+
+  if (isAdminDashboard) {
+    router.replace("/dashboard/userDashboard");
+  } else {
+    router.replace("/dashboard/dashboard");
+  }
+};
+
+  // logout
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
     router.replace("/auth/login");
   };
 
   return (
     <div className="h-16 bg-white shadow p-3 d-flex align-items-center justify-content-between">
-      {/* left */}
+      {/* LEFT */}
       <div className="d-flex align-items-center gap-2">
         <span>👤 Welcome</span>
+
         <span className="fw-bold text-primary">{user?.name}</span>
-        {["admin", "hr"].includes(
-          typeof getRole() === "string"
-            ? getRole()
-            : getRole()?.roleName || getRole()?.role?.roleName,
-        ) && (
+
+        {/* switch button only admin/hr */}
+        {["admin", "hr"].includes(roleName) && (
           <button
             onClick={toggleDashboard}
             className="btn btn-primary btn-sm mx-2"
@@ -52,12 +71,12 @@ export default function Topbar({ user }) {
         )}
       </div>
 
-      {/* right */}
+      {/* RIGHT */}
       <button
         onClick={handleLogout}
-        className="btn btn-outline-danger btn-sm mx-4"
+        className="btn btn-outline-danger btn-sm mx-4 d-flex align-items-center gap-2"
       >
-        <FaSignOutAlt className="mx-2" />
+        <FaSignOutAlt />
         Logout
       </button>
     </div>
