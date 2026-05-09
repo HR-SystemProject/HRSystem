@@ -132,7 +132,6 @@ const createPayroll = async (req, res) => {
 
     const { employeeId, month, bonus, deductions, paymentDate } = req.body;
 
-    // required fields
     if (!employeeId || !month) {
       return res.status(400).json({
         success: false,
@@ -140,7 +139,6 @@ const createPayroll = async (req, res) => {
       });
     }
 
-    // month format validation
     const regex = /^\d{4}-\d{2}$/;
     if (!regex.test(month)) {
       return res.status(400).json({
@@ -149,10 +147,8 @@ const createPayroll = async (req, res) => {
       });
     }
 
-    // normalize month
     const normalizedMonth = month.trim().slice(0, 7);
 
-    // check employee exists
     const employee = await employeeModel.findById(employeeId);
 
     if (!employee) {
@@ -164,7 +160,6 @@ const createPayroll = async (req, res) => {
 
     const baseSalary = employee.salary;
 
-    // prevent duplicate payroll
     const exists = await payrollModel.findOne({
       employeeId,
       month: normalizedMonth,
@@ -177,11 +172,9 @@ const createPayroll = async (req, res) => {
       });
     }
 
-    // calculate net salary
     const netSalary =
       Number(baseSalary || 0) + Number(bonus || 0) - Number(deductions || 0);
 
-    // create payroll
     const newPayroll = new payrollModel({
       employeeId,
       month: normalizedMonth,
