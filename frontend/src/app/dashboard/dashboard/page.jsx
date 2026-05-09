@@ -442,7 +442,7 @@ export default function AdminDashboard() {
       <div className="row g-4 justify-content-center">
 
         {/* Attendance */}
-        <div className="col-12 col-md-12 col-lg-8">
+        <div className="col-12 col-md-12 col-lg-6">
           <div className="shadow-sm p-4 rounded bg-white h-100">
             <h6 className="fw-semibold">Monthly Attendance Distribution</h6>
             <p className="text-muted mb-3" style={{ fontSize: "12px" }}>
