@@ -175,10 +175,6 @@ export default function DepartmentsPage() {
     setDeleteDepartmentId(id);
   };
 
-  const closeDelete = () => {
-    setDeleteDepartmentId(null);
-  };
-
   const handleDeleteDepartment = async () => {
     try {
       const res = await deleteDepartment(deleteDepartmentId);
@@ -207,12 +203,7 @@ export default function DepartmentsPage() {
     return matchSearch && matchDepartment && matchManager;
   });
 
-  const totalDepartments = departments.length;
 
-  const totalEmployees = departments.reduce(
-    (sum, dep) => sum + (dep.employeesCount || 0),
-    0,
-  );
 
   const chartData = departments.map((dep) => ({
     name: dep.name,
@@ -267,7 +258,7 @@ export default function DepartmentsPage() {
       <div className="d-flex gap-2 mb-3 justify-content-center">
         <input
           className="form-control w-25"
-          placeholder="Search department..."
+          placeholder="Search ..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />

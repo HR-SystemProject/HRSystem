@@ -21,7 +21,7 @@ export default function AttendancePage() {
   const fetchAttendanceTodayData = async () => {
     try {
       const res = await getTodayAttendance();
-      setAttendance(res.data.data || []); // مهم جداً
+      setAttendance(res.data.data || []); 
     } catch (err) {
       setError(err.response?.data?.message || "Error loading data");
       setAttendance([]);
@@ -89,7 +89,7 @@ export default function AttendancePage() {
           type="text"
           className="form-control w-25"
           style={{ width: "220px" }}
-          placeholder="Search employee..."
+          placeholder="Search ..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />

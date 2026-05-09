@@ -288,7 +288,7 @@ export default function LeaveRequestsPage() {
       <div className="mb-3 d-flex gap-3 align-items-center justify-content-center">
         <input
           type="text"
-          placeholder="Search by employee name"
+          placeholder="Search ..."
           className="form-control  w-25"
           style={{ width: "250px" }}
           value={search}

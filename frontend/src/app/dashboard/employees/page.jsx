@@ -143,7 +143,7 @@ export default function EmployeesPage() {
     }
   };
 
-  // VIEW
+
   const handleView = async (id) => {
     try {
       const res = await getEmployeeById(id);
@@ -153,7 +153,6 @@ export default function EmployeesPage() {
     }
   };
 
-  // EDIT
   const handleEditClick = (emp) => {
     setEditEmployee(emp);
   };
@@ -188,7 +187,6 @@ export default function EmployeesPage() {
     }
   };
 
-  // DELETE
   const handleDelete = async () => {
     try {
       await deleteEmployee(deleteId);
@@ -295,7 +293,7 @@ export default function EmployeesPage() {
         {/* SEARCH */}
         <input
           className="form-control w-25"
-          placeholder="Search employee name..."
+          placeholder="Search ..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />

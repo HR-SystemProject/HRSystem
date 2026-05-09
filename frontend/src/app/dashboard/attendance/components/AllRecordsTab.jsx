@@ -33,7 +33,6 @@ export default function AllRecordsTab() {
       setLoading(true);
       const res = await getAttendance();
       setAttendance(res.data.data);
-      
     } catch (err) {
       setError(err.response?.data?.message || "Error loading data");
     } finally {
@@ -50,7 +49,6 @@ export default function AllRecordsTab() {
     }
   };
 
-  // ---------------- SORT ----------------
   const handleSort = (key) => {
     let direction = "asc";
 
@@ -76,12 +74,12 @@ export default function AllRecordsTab() {
     }
   };
 
-  // ---------------- FILTER + SEARCH + SORT ----------------
+  const getEmployeeName = (item) =>
+    item.employeeId?.userId?.name || item.employeeId?.name || "";
+
   const processedData = attendance
     .filter((item) =>
-      (item.employeeId?.name || "")
-        .toLowerCase()
-        .includes(search.toLowerCase()),
+      getEmployeeName(item).toLowerCase().includes(search.toLowerCase()),
     )
     .filter((item) => {
       if (selectedDate) {
@@ -105,7 +103,6 @@ export default function AllRecordsTab() {
       return 0;
     });
 
-  // ---------------- PAGINATION ----------------
   const totalPages = Math.ceil(processedData.length / itemsPerPage);
 
   const paginatedData = processedData.slice(
@@ -142,7 +139,7 @@ export default function AllRecordsTab() {
         <input
           className="form-control"
           style={{ width: "200px" }}
-          placeholder="Search employee..."
+          placeholder="Search ..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -170,19 +167,6 @@ export default function AllRecordsTab() {
           <option value="absent">Absent</option>
         </select>
 
-        <select
-          className="form-select"
-          style={{ width: "200px" }}
-          value={selectedEmployee}
-          onChange={(e) => setSelectedEmployee(e.target.value)}
-        >
-          <option value="">All Employees</option>
-          {employees.map((emp) => (
-            <option key={emp._id || emp.email} value={emp._id}>
-              {emp.name}
-            </option>
-          ))}
-        </select>
 
         <button
           className="btn btn-outline-danger btn-sm"
@@ -241,9 +225,7 @@ export default function AllRecordsTab() {
               paginatedData.map((item) => (
                 <tr key={item._id || item.date}>
                   <td>
-                    <div className="fw-semibold">
-                      {item.employeeId?.userId?.name}
-                    </div>
+                    <div className="fw-semibold">{getEmployeeName(item)}</div>
                     <small className="text-muted">
                       {item.employeeId?.email}
                     </small>

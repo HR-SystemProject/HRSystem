@@ -232,9 +232,9 @@ export default function Page() {
         {/* Search */}
         <input
           type="text"
-          className="form-control"
-          style={{ width: "250px" }}
-          placeholder="Search by employee name..."
+          className="form-control w-25"
+          
+          placeholder="Search ..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -598,7 +598,6 @@ export default function Page() {
                       <FaEye size={13} />
                     </button>
 
-                    {/* {isAdminOrHR && ( */}
                     <>
                       <button
                         onClick={() => handleEditPayroll(payroll)}
@@ -610,7 +609,6 @@ export default function Page() {
                         <FaEdit size={13} />
                       </button>
                     </>
-                    {/* )} */}
                   </div>
                 </td>
               </tr>
