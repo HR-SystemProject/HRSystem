@@ -11,7 +11,7 @@ export default function Home() {
 
     const roleName = role?.roleName?.toLowerCase();
 
-    if (roleName === "admin" || roleName === "he") {
+    if (roleName === "admin" || roleName === "hr") {
       router.replace("/dashboard/dashboard");
     }
     else if (roleName === "user") {

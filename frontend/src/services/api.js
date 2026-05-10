@@ -2,7 +2,7 @@ import axios from "axios";
 import { getToken } from "../utils/auth";
 
 export const API = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: "https://hrsystem-2-7b82.onrender.com"
 });
 
 API.interceptors.request.use((config) => {
